@@ -4,7 +4,7 @@
 #include <zmq.hpp>
 #include <msgpack.hpp>
 #include <sqlite3.h>
-#include "../messages.h"
+#include "messages.h"
 
 int main(int argc, char *argv[]) {
 
@@ -90,7 +90,7 @@ int main(int argc, char *argv[]) {
                 msgpack::pack(buffer, msg);
                 const std::string payload = buffer.str();
                 sock.send(zmq::buffer(payload), zmq::send_flags::dontwait);
-                std::cout << " [server] sent BANK_LIST_RESPONSE\n";
+                std::cout << "[server] sent BANK_LIST_RESPONSE\n";
 
             }
         } catch (const std::exception &e) {

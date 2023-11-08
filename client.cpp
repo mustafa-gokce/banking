@@ -5,7 +5,7 @@
 #include <chrono>
 #include <zmq.hpp>
 #include <msgpack.hpp>
-#include "../messages.h"
+#include "messages.h"
 
 int main(int argc, char *argv[]) {
     /*
