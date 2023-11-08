@@ -64,8 +64,7 @@ int main(int argc, char *argv[]) {
         // print the BANK_LIST_RESPONSE
         std::cout << "[client] received BANK_LIST_RESPONSE\n";
         for (const auto &bank: bank_list_response.banks) {
-            std::cout << "[client] bank.id: " << bank.id << "\n";
-            std::cout << "[client] bank.name: " << bank.name << "\n";
+            std::cout << "        bank.id:" << bank.id << ", " << "bank.name:" << bank.name << "\n";
         }
 
     } else {

@@ -82,9 +82,11 @@ int main(int argc, char *argv[]) {
                 }
                 sqlite3_finalize(stmt);
 
+                // pack the BANK_LIST_RESPONSE
+                msg = MSG{MSG_ID::BANK_LIST_RESPONSE, msgpack::object(bank_list_response, z)};
+
                 // send the BANK_LIST_RESPONSE
                 std::stringstream buffer;
-                msg = MSG{MSG_ID::BANK_LIST_RESPONSE, msgpack::object(bank_list_response, z)};
                 msgpack::pack(buffer, msg);
                 const std::string payload = buffer.str();
                 sock.send(zmq::buffer(payload), zmq::send_flags::dontwait);
