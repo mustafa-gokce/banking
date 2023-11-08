@@ -1,4 +1,7 @@
+# set minimum cmake version
 cmake_minimum_required(VERSION 3.22.1)
+
+# set project name
 project(banking)
 
 # set compiler flags
@@ -12,11 +15,13 @@ find_package(Qt6 COMPONENTS
         Core
         Gui
         Widgets
-        REQUIRED)
+        REQUIRED
+)
 
 # create client executable
 add_executable(client
-        client.cpp)
+        client.cpp
+)
 target_link_libraries(client
         Qt::Core
         Qt::Gui
@@ -27,7 +32,8 @@ target_link_libraries(client
 
 # create server executable
 add_executable(server
-        server.cpp)
+        server.cpp
+)
 target_link_libraries(server
         zmq
         msgpackc
@@ -38,4 +44,5 @@ target_link_libraries(server
 add_custom_command(TARGET server POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E create_symlink
         ${CMAKE_SOURCE_DIR}/banking.sqlite
-        ${CMAKE_CURRENT_BINARY_DIR}/banking.sqlite)
+        ${CMAKE_CURRENT_BINARY_DIR}/banking.sqlite
+)
