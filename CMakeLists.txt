@@ -19,8 +19,14 @@ target_link_libraries(banking_client
         Qt::Core
         Qt::Gui
         Qt::Widgets
+        zmq
+        msgpackc
 )
 
 add_executable(banking_server
         src/server/main.cpp)
-target_link_libraries(banking_server)
+target_link_libraries(banking_server
+        zmq
+        msgpackc
+        sqlite3
+)
