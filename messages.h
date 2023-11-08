@@ -81,21 +81,38 @@ public:
  */
 class LOGIN_REQUEST {
 public:
-    std::string username{};
-    std::string password{};
-    uint16_t bank_id{};
-    MSGPACK_DEFINE (username, password, bank_id);
+    std::string user{};
+    std::string pass{};
+    uint16_t bank{};
+    MSGPACK_DEFINE (user, pass, bank);
 };
+
+/*
+ * This is a list of all the login response types.
+ */
+enum class LOGIN_RESPONSE_TYPE : uint8_t {
+    LOGIN_SUCCESS = 0,
+    SERVER_ERROR = 1,
+    INVALID_USERNAME_OR_PASSWORD = 2,
+    INVALID_BANK_ID = 3,
+    ALREADY_LOGGED_IN = 4,
+    UNKNOWN = 255,
+};
+MSGPACK_ADD_ENUM(LOGIN_RESPONSE_TYPE)
 
 /*
  * This is the message that is sent from the server to the client in response to a LOGIN_REQUEST.
  */
 class LOGIN_RESPONSE {
 public:
-    uint32_t user_id{};
-    std::string citizen_name{};
+    LOGIN_RESPONSE_TYPE type{LOGIN_RESPONSE_TYPE::UNKNOWN};
+    uint32_t id{};
+    uint16_t bank{};
+    uint32_t citizen{};
+    std::string name{};
+    std::string user{};
     std::string token{};
-    MSGPACK_DEFINE (user_id, citizen_name, token);
+    MSGPACK_DEFINE (type, id, bank, citizen, name, user, token);
 };
 
 #endif //BANKING_MESSAGES_H
