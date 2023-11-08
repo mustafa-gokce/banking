@@ -68,9 +68,6 @@ int main(int argc, char *argv[]) {
         }
 
     } else {
-
-        // print the error
         std::cout << "[client] received unknown message\n";
-
     }
 }
