@@ -16,7 +16,7 @@ int main(int argc, char *argv[]) {
     sqlite3 *db;
 
     // open database banking.sqlite located in the same directory as the executable
-    if (sqlite3_open("/home/m/study/banking/banking.sqlite", &db)) {
+    if (sqlite3_open("banking.sqlite", &db)) {
         std::cout << "[server] can not open database: " << sqlite3_errmsg(db) << "\n";
         return (1);
     } else {

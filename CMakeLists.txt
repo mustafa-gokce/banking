@@ -30,3 +30,9 @@ target_link_libraries(banking_server
         msgpackc
         sqlite3
 )
+
+# create symlink to database
+add_custom_command(TARGET banking_server POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E create_symlink
+        ${CMAKE_SOURCE_DIR}/banking.sqlite
+        ${CMAKE_CURRENT_BINARY_DIR}/banking.sqlite)
