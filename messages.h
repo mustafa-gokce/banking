@@ -8,7 +8,7 @@
  */
 enum class MSG_ID : uint16_t {
     NONE = 0,
-    HEARTBEAT = 1,
+    PING = 1,
     BANK_LIST_REQUEST = 2,
     BANK_LIST_RESPONSE = 3,
     LOGIN_REQUEST = 4,
@@ -28,22 +28,25 @@ public:
 };
 
 /*
- * This is a list of all the heartbeat types.
+ * This is a list of all the ping types.
  */
-enum class HEARTBEAT_TYPE : uint16_t {
+enum class PING_TYPE : uint8_t {
     NONE = 0,
-    CLIENT = 0,
-    SERVER = 1,
+    CLIENT = 1,
+    SERVER = 2,
 };
-MSGPACK_ADD_ENUM(HEARTBEAT_TYPE)
+MSGPACK_ADD_ENUM(PING_TYPE)
 
 /*
- * This is the message that is sent from an endpoint to the other endpoint to indicate that it is still alive.
+ * This is the message that is sent from an endpoint to the other endpoint to check that it is alive.
  */
-class HEARTBEAT {
+class PING {
 public:
-    HEARTBEAT_TYPE type{HEARTBEAT_TYPE::NONE};
-    MSGPACK_DEFINE (type);
+    PING_TYPE type{PING_TYPE::NONE};
+    std::string token{};
+    uint64_t client_time{};
+    uint64_t server_time{};
+    MSGPACK_DEFINE (type, token, client_time, server_time);
 };
 
 /*

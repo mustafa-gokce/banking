@@ -37,7 +37,7 @@ int main(int argc, char *argv[]) {
         // receive a message
         zmq::message_t message;
         if (sock.recv(message, zmq::recv_flags::dontwait)) {
-            std::cout << "[server] received message\n";
+            std::cout << "[server] received a message\n";
         } else {
             std::cout << "[server] no message received\n";
             std::this_thread::sleep_for(std::chrono::milliseconds(1000));
@@ -56,8 +56,32 @@ int main(int argc, char *argv[]) {
             msgpack::unpack(result, sbuf.str().data(), sbuf.str().size(), off);
             result.get().convert(msg);
 
-            // handle the BANK_LIST_REQUEST message
-            if (msg.id == MSG_ID::BANK_LIST_REQUEST) {
+            // handle the PING message
+            if (msg.id == MSG_ID::PING) {
+
+                // parse the PING message
+                PING ping;
+                msg.msg.convert(ping);
+                std::cout << "[server] got PING\n";
+
+                // prepare the response PING
+                ping.type = PING_TYPE::SERVER;
+                ping.server_time = std::chrono::duration_cast<std::chrono::milliseconds>(
+                        std::chrono::system_clock::now().time_since_epoch()).count();
+
+                // pack the PING message
+                msg = MSG{MSG_ID::PING, msgpack::object(ping, z)};
+
+                // send the PING message
+                std::stringstream buffer;
+                msgpack::pack(buffer, msg);
+                const std::string payload = buffer.str();
+                sock.send(zmq::buffer(payload), zmq::send_flags::dontwait);
+                std::cout << "[server] sent PING\n";
+            }
+
+                // handle the BANK_LIST_REQUEST message
+            else if (msg.id == MSG_ID::BANK_LIST_REQUEST) {
 
                 // parse the BANK_LIST_REQUEST
                 BANK_LIST_REQUEST bank_list_request;
