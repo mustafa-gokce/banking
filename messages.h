@@ -52,33 +52,6 @@ public:
 };
 
 /*
- * This is the message that is sent from the client to the server to request a list of banks.
- */
-class BANK_LIST_REQUEST {
-public:
-    MSGPACK_DEFINE ();
-};
-
-/*
- * This is the message sub-object that is sent from the server to the client in response to a BANK_LIST_REQUEST.
- */
-class Bank {
-public:
-    uint16_t id{};
-    std::string name{};
-    MSGPACK_DEFINE (id, name);
-};
-
-/*
- * This is the message that is sent from the server to the client in response to a BANK_LIST_REQUEST.
- */
-class BANK_LIST_RESPONSE {
-public:
-    std::vector<Bank> banks{};
-    MSGPACK_DEFINE (banks);
-};
-
-/*
  * This is the message that is sent from the client to the server to request a login.
  */
 class LOGIN_REQUEST {
@@ -146,6 +119,33 @@ class LOGOUT_RESPONSE {
 public:
     LOGOUT_RESPONSE_TYPE type{LOGOUT_RESPONSE_TYPE::UNKNOWN};
     MSGPACK_DEFINE (type);
+};
+
+/*
+ * This is the message that is sent from the client to the server to request a list of banks.
+ */
+class BANK_LIST_REQUEST {
+public:
+    MSGPACK_DEFINE ();
+};
+
+/*
+ * This is the message sub-object that is sent from the server to the client in response to a BANK_LIST_REQUEST.
+ */
+class Bank {
+public:
+    uint16_t id{};
+    std::string name{};
+    MSGPACK_DEFINE (id, name);
+};
+
+/*
+ * This is the message that is sent from the server to the client in response to a BANK_LIST_REQUEST.
+ */
+class BANK_LIST_RESPONSE {
+public:
+    std::vector<Bank> banks{};
+    MSGPACK_DEFINE (banks);
 };
 
 #endif //BANKING_MESSAGES_H
