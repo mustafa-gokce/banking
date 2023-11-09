@@ -52,7 +52,7 @@ int main(int argc, char *argv[]) {
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
     // hold login response messages for each client
-    std::vector<LOGIN_RESPONSE> login_responses;
+    std::vector<LOGIN_RESPONSE> user_sessions;
 
     // infinite loop
     while (true) {
@@ -170,7 +170,7 @@ int main(int argc, char *argv[]) {
                 }
 
                 // check if the user has already logged in
-                for (const auto &response: login_responses) {
+                for (const auto &response: user_sessions) {
                     if (response.id == login_response.id) {
                         std::cout << "[server] user has already logged in\n";
                         if (login_response.type == LOGIN_RESPONSE_TYPE::LOGIN_SUCCESS) {
@@ -187,7 +187,8 @@ int main(int argc, char *argv[]) {
                     login_response.token = random_string(32);
 
                     // add the LOGIN_RESPONSE to the list of login responses
-                    login_responses.push_back(login_response);
+                    user_sessions.push_back(login_response);
+                    std::cout << "[server] user << " << login_response.user << " logged in successfully\n";
                 }
 
                 // pack the LOGIN_RESPONSE
@@ -199,6 +200,61 @@ int main(int argc, char *argv[]) {
                 const std::string payload = buffer.str();
                 sock.send(zmq::buffer(payload), zmq::send_flags::dontwait);
                 std::cout << "[server] sent LOGIN_RESPONSE\n";
+
+            }
+
+            // handle the LOGOUT_REQUEST message
+            else if (msg.id == MSG_ID::LOGOUT_REQUEST) {
+
+                // parse the LOGOUT_REQUEST
+                LOGOUT_REQUEST logout_request;
+                msg.msg.convert(logout_request);
+                std::cout << "[server] got LOGOUT_REQUEST\n";
+
+                // create a LOGOUT_RESPONSE
+                LOGOUT_RESPONSE logout_response;
+                logout_response.type = LOGOUT_RESPONSE_TYPE::LOGOUT_SUCCESS;
+
+                // check if the user has already logged in
+                int token_index = -1;
+                for (int i = 0; i < user_sessions.size(); i++) {
+                    if (user_sessions[i].user == logout_request.user) {
+                        token_index = i;
+                        break;
+                    }
+                }
+                if (token_index == -1) {
+                    std::cout << "[server] user has not logged in\n";
+                    if (logout_response.type == LOGOUT_RESPONSE_TYPE::LOGOUT_SUCCESS) {
+                        logout_response.type = LOGOUT_RESPONSE_TYPE::NOT_LOGGED_IN;
+                    }
+                }
+
+                // check if token is valid
+                if (logout_response.type == LOGOUT_RESPONSE_TYPE::LOGOUT_SUCCESS) {
+                    if (user_sessions[token_index].token != logout_request.token) {
+                        std::cout << "[server] invalid token\n";
+                        if (logout_response.type == LOGOUT_RESPONSE_TYPE::LOGOUT_SUCCESS) {
+                            logout_response.type = LOGOUT_RESPONSE_TYPE::INVALID_TOKEN;
+                        }
+                    }
+                }
+
+                // remove the LOGIN_RESPONSE from the list of login responses
+                if (logout_response.type == LOGOUT_RESPONSE_TYPE::LOGOUT_SUCCESS) {
+                    std::cout << "[server] user " << logout_request.user << " logged out successfully\n";
+                    user_sessions.erase(user_sessions.begin() + token_index);
+                }
+
+                // pack the LOGOUT_RESPONSE
+                msg = MSG{MSG_ID::LOGOUT_RESPONSE, msgpack::object(logout_response, z)};
+
+                // send the LOGOUT_RESPONSE
+                std::stringstream buffer;
+                msgpack::pack(buffer, msg);
+                const std::string payload = buffer.str();
+                sock.send(zmq::buffer(payload), zmq::send_flags::dontwait);
+                std::cout << "[server] sent LOGOUT_RESPONSE\n";
 
             }
 

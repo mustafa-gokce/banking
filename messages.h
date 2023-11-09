@@ -13,6 +13,8 @@ enum class MSG_ID : uint16_t {
     BANK_LIST_RESPONSE = 3,
     LOGIN_REQUEST = 4,
     LOGIN_RESPONSE = 5,
+    LOGOUT_REQUEST = 6,
+    LOGOUT_RESPONSE = 7,
 };
 MSGPACK_ADD_ENUM(MSG_ID)
 
@@ -113,6 +115,37 @@ public:
     std::string user{};
     std::string token{};
     MSGPACK_DEFINE (type, id, bank, citizen, name, user, token);
+};
+
+/*
+ * This is the message that is sent from the client to the server to request a logout.
+ */
+class LOGOUT_REQUEST {
+public:
+    std::string user{};
+    std::string token{};
+    MSGPACK_DEFINE (user, token);
+};
+
+/*
+ * This is a list of all the logout response types.
+ */
+enum class LOGOUT_RESPONSE_TYPE : uint8_t {
+    LOGOUT_SUCCESS = 0,
+    SERVER_ERROR = 1,
+    NOT_LOGGED_IN = 2,
+    INVALID_TOKEN = 3,
+    UNKNOWN = 255,
+};
+MSGPACK_ADD_ENUM(LOGOUT_RESPONSE_TYPE)
+
+/*
+ * This is the message that is sent from the server to the client in response to a LOGOUT_REQUEST.
+ */
+class LOGOUT_RESPONSE {
+public:
+    LOGOUT_RESPONSE_TYPE type{LOGOUT_RESPONSE_TYPE::UNKNOWN};
+    MSGPACK_DEFINE (type);
 };
 
 #endif //BANKING_MESSAGES_H

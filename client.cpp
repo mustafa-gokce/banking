@@ -48,6 +48,51 @@ int main(int argc, char *argv[]) {
     // wait for a second for ZMQ to properly initialize
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
+    // create a LOGOUT_REQUEST message
+    LOGOUT_REQUEST logout_request;
+    logout_request.user = "aylin.yilmaz42@gmail.com";
+    logout_request.token = "KynVSJrWp3BLAlytnlVSOaTVa6zOUrup";
+
+    // pack the LOGOUT_REQUEST message
+    msg = MSG{MSG_ID::LOGOUT_REQUEST, msgpack::object(logout_request, z)};
+
+    // send the LOGOUT_REQUEST message
+    std::stringstream buffer;
+    msgpack::pack(buffer, msg);
+    const std::string payload = buffer.str();
+    sock.send(zmq::buffer(payload), zmq::send_flags::dontwait);
+    std::cout << "[client] sent LOGOUT_REQUEST\n";
+
+    // receive a message
+    zmq::message_t message;
+    (void) sock.recv(message);
+
+    // parse the message
+    msg = MSG{};
+    msgpack::unpacked result;
+    std::stringstream sbuf;
+    sbuf << message.to_string();
+    std::size_t off = 0;
+    msgpack::unpack(result, sbuf.str().data(), sbuf.str().size(), off);
+    result.get().convert(msg);
+
+    // handle the LOGOUT_RESPONSE message
+    if (msg.id == MSG_ID::LOGOUT_RESPONSE) {
+
+        // parse the LOGOUT_RESPONSE
+        LOGOUT_RESPONSE logout_response;
+        msg.msg.convert(logout_response);
+
+        // print the LOGOUT_RESPONSE
+        std::cout << "[client] received LOGOUT_RESPONSE\n";
+        std::cout << "        logout_response.type:" << unsigned(logout_response.type) << "\n";
+
+    } else {
+        std::cout << "[client] received unknown message\n";
+    }
+
+    /*
+
     // create a LOGIN_REQUEST message
     LOGIN_REQUEST login_request;
     login_request.user = "aylin.yilmaz42@gmail.com";
@@ -97,8 +142,6 @@ int main(int argc, char *argv[]) {
     } else {
         std::cout << "[client] received unknown message\n";
     }
-
-    /*
 
     // create a PING message
     PING ping;
