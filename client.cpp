@@ -48,6 +48,56 @@ int main(int argc, char *argv[]) {
     // wait for a second for ZMQ to properly initialize
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
+    // create an ADD_BALANCE_REQUEST message
+    ADD_BALANCE_REQUEST add_balance_request;
+    add_balance_request.user = 1;
+    add_balance_request.token = "KynVSJrWp3BLAlytnlVSOaTVa6zOUrup";
+    add_balance_request.bank = 1;
+    add_balance_request.iban = "TR6136876433976928";
+    add_balance_request.amount = (double_t) 100;
+
+    // pack the ADD_BALANCE_REQUEST message
+    msg = MSG{MSG_ID::ADD_BALANCE_REQUEST, msgpack::object(add_balance_request, z)};
+
+    // send the ADD_BALANCE_REQUEST message
+    std::stringstream buffer;
+    msgpack::pack(buffer, msg);
+    const std::string payload = buffer.str();
+    sock.send(zmq::buffer(payload), zmq::send_flags::dontwait);
+    std::cout << "[client] sent ADD_BALANCE_REQUEST\n";
+
+    // receive a message
+    zmq::message_t message;
+    (void) sock.recv(message);
+
+    // parse the message
+    msg = MSG{};
+    msgpack::unpacked result;
+    std::stringstream sbuf;
+    sbuf << message.to_string();
+    std::size_t off = 0;
+    msgpack::unpack(result, sbuf.str().data(), sbuf.str().size(), off);
+    result.get().convert(msg);
+
+    // handle the ADD_BALANCE_RESPONSE message
+    if (msg.id == MSG_ID::ADD_BALANCE_RESPONSE) {
+
+        // parse the ADD_BALANCE_RESPONSE
+        ADD_BALANCE_RESPONSE add_balance_response;
+        msg.msg.convert(add_balance_response);
+
+        // print the ADD_BALANCE_RESPONSE
+        std::cout << "[client] received ADD_BALANCE_RESPONSE\n";
+        std::cout.precision(2);
+        std::cout << std::fixed;
+        std::cout << "        add_balance_response.amount:" << add_balance_response.amount << "\n";
+
+    } else {
+        std::cout << "[client] received unknown message\n";
+    }
+
+    /*
+
     // create a ACCOUNT_LIST_REQUEST message
     ACCOUNT_LIST_REQUEST account_list_request;
     account_list_request.user = 16;
@@ -98,8 +148,6 @@ int main(int argc, char *argv[]) {
     } else {
         std::cout << "[client] received unknown message\n";
     }
-
-    /*
 
     // create a LOGOUT_REQUEST message
     LOGOUT_REQUEST logout_request;

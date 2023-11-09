@@ -120,7 +120,7 @@ int main(int argc, char *argv[]) {
                 std::string sql = "SELECT id, citizen, name, user FROM users WHERE user = ? AND pass = ?";
                 if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
                     std::cout << "[server] can not prepare statement: " << sqlite3_errmsg(db) << "\n";
-                    if (login_response.type == LOGIN_RESPONSE_TYPE::LOGIN_SUCCESS){
+                    if (login_response.type == LOGIN_RESPONSE_TYPE::LOGIN_SUCCESS) {
                         login_response.type = LOGIN_RESPONSE_TYPE::SERVER_ERROR;
                     }
                 }
@@ -148,7 +148,7 @@ int main(int argc, char *argv[]) {
                 sql = "SELECT iban FROM accounts WHERE user = ? AND bank = ?";
                 if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
                     std::cout << "[server] can not prepare statement: " << sqlite3_errmsg(db) << "\n";
-                    if (login_response.type == LOGIN_RESPONSE_TYPE::LOGIN_SUCCESS){
+                    if (login_response.type == LOGIN_RESPONSE_TYPE::LOGIN_SUCCESS) {
                         login_response.type = LOGIN_RESPONSE_TYPE::SERVER_ERROR;
                     }
                 }
@@ -200,7 +200,6 @@ int main(int argc, char *argv[]) {
                 const std::string payload = buffer.str();
                 sock.send(zmq::buffer(payload), zmq::send_flags::dontwait);
                 std::cout << "[server] sent LOGIN_RESPONSE\n";
-
             }
 
             // handle the LOGOUT_REQUEST message
@@ -255,7 +254,6 @@ int main(int argc, char *argv[]) {
                 const std::string payload = buffer.str();
                 sock.send(zmq::buffer(payload), zmq::send_flags::dontwait);
                 std::cout << "[server] sent LOGOUT_RESPONSE\n";
-
             }
 
             // handle the BANK_LIST_REQUEST message
@@ -293,7 +291,6 @@ int main(int argc, char *argv[]) {
                 const std::string payload = buffer.str();
                 sock.send(zmq::buffer(payload), zmq::send_flags::dontwait);
                 std::cout << "[server] sent BANK_LIST_RESPONSE\n";
-
             }
 
             // handle the ACCOUNT_LIST_REQUEST message
@@ -352,8 +349,80 @@ int main(int argc, char *argv[]) {
                 const std::string payload = buffer.str();
                 sock.send(zmq::buffer(payload), zmq::send_flags::dontwait);
                 std::cout << "[server] sent ACCOUNT_LIST_RESPONSE\n";
-
             }
+
+            // handle the ADD_BALANCE_REQUEST message
+            else if (msg.id == MSG_ID::ADD_BALANCE_REQUEST) {
+
+                // parse the ADD_BALANCE_REQUEST
+                ADD_BALANCE_REQUEST add_balance_request;
+                msg.msg.convert(add_balance_request);
+                std::cout << "[server] got ADD_BALANCE_REQUEST\n";
+
+                // create an ADD_BALANCE_RESPONSE
+                ADD_BALANCE_RESPONSE add_balance_response;
+                add_balance_response.user = add_balance_request.user;
+                add_balance_response.token = add_balance_request.token;
+                add_balance_response.bank = add_balance_request.bank;
+                add_balance_response.iban = add_balance_request.iban;
+
+                // check if the user has already logged in and the token is valid
+                int token_index = -1;
+                for (int i = 0; i < user_sessions.size(); i++) {
+                    if (user_sessions[i].id == add_balance_request.user) {
+                        if (user_sessions[i].token == add_balance_request.token) {
+                            token_index = i;
+                        }
+                        break;
+                    }
+                }
+
+                // check if the user has already logged in
+                if (token_index == -1) {
+
+                    // add the balance to the account
+                    sqlite3_stmt *stmt;
+                    std::string sql = "UPDATE accounts SET balance = balance + ? WHERE iban = ? AND user = ? AND bank = ?";
+                    if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
+                        std::cout << "[server] can not prepare statement: " << sqlite3_errmsg(db) << "\n";
+                        continue;
+                    }
+                    sqlite3_bind_double(stmt, 1, add_balance_request.amount);
+                    sqlite3_bind_text(stmt, 2, add_balance_request.iban.c_str(), -1, SQLITE_STATIC);
+                    sqlite3_bind_int(stmt, 3, (int) add_balance_request.user);
+                    sqlite3_bind_int(stmt, 4, add_balance_request.bank);
+                    if (sqlite3_step(stmt) != SQLITE_DONE) {
+                        std::cout << "[server] can not update balance: " << sqlite3_errmsg(db) << "\n";
+                    }
+                    sqlite3_finalize(stmt);
+
+                    // get the new balance from the database
+                    sql = "SELECT balance FROM accounts WHERE iban = ? AND user = ? AND bank = ?";
+                    if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
+                        std::cout << "[server] can not prepare statement: " << sqlite3_errmsg(db) << "\n";
+                        continue;
+                    }
+                    sqlite3_bind_text(stmt, 1, add_balance_request.iban.c_str(), -1, SQLITE_STATIC);
+                    sqlite3_bind_int(stmt, 2, (int) add_balance_request.user);
+                    sqlite3_bind_int(stmt, 3, add_balance_request.bank);
+                    if (sqlite3_step(stmt) != SQLITE_ROW) {
+                        std::cout << "[server] can not get balance: " << sqlite3_errmsg(db) << "\n";
+                    }
+                    add_balance_response.amount = sqlite3_column_double(stmt, 0);
+                    sqlite3_finalize(stmt);
+
+                    // pack the ADD_BALANCE_RESPONSE
+                    msg = MSG{MSG_ID::ADD_BALANCE_RESPONSE, msgpack::object(add_balance_response, z)};
+
+                    // send the ADD_BALANCE_RESPONSE
+                    std::stringstream buffer;
+                    msgpack::pack(buffer, msg);
+                    const std::string payload = buffer.str();
+                    sock.send(zmq::buffer(payload), zmq::send_flags::dontwait);
+                    std::cout << "[server] sent ADD_BALANCE_RESPONSE\n";
+                }
+            }
+
         } catch (const std::exception &e) {
             std::cout << "[server] " << e.what() << "\n";
         }

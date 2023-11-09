@@ -191,11 +191,12 @@ public:
  */
 class ADD_BALANCE_REQUEST {
 public:
-    std::string user{};
+    uint32_t user{};
     std::string token{};
+    uint16_t bank{};
     std::string iban{};
     double_t amount{};
-    MSGPACK_DEFINE (user, token, iban, amount);
+    MSGPACK_DEFINE (user, token, bank, iban, amount);
 };
 
 /*
@@ -204,8 +205,6 @@ public:
  * Echo back the total balance of the account after adding the amount.
  */
 class ADD_BALANCE_RESPONSE : public ADD_BALANCE_REQUEST {
-public:
-    MSGPACK_DEFINE ();
 };
 
 /*
