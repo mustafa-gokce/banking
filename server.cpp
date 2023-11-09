@@ -378,7 +378,7 @@ int main(int argc, char *argv[]) {
                 }
 
                 // check if the user has already logged in
-                if (token_index == -1) {
+                if (token_index != -1) {
 
                     // add the balance to the account
                     sqlite3_stmt *stmt;
