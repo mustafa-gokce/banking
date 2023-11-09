@@ -48,6 +48,59 @@ int main(int argc, char *argv[]) {
     // wait for a second for ZMQ to properly initialize
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
+    // create a ACCOUNT_LIST_REQUEST message
+    ACCOUNT_LIST_REQUEST account_list_request;
+    account_list_request.user = 16;
+    account_list_request.token = "KynVSJrWp3BLAlytnlVSOaTVa6zOUrup";
+    account_list_request.bank = 10;
+
+    // pack the ACCOUNT_LIST_REQUEST message
+    msg = MSG{MSG_ID::ACCOUNT_LIST_REQUEST, msgpack::object(account_list_request, z)};
+
+    // send the ACCOUNT_LIST_REQUEST message
+    std::stringstream buffer;
+    msgpack::pack(buffer, msg);
+    const std::string payload = buffer.str();
+    sock.send(zmq::buffer(payload), zmq::send_flags::dontwait);
+    std::cout << "[client] sent ACCOUNT_LIST_REQUEST\n";
+
+    // receive a message
+    zmq::message_t message;
+    (void) sock.recv(message);
+
+    // parse the message
+    msg = MSG{};
+    msgpack::unpacked result;
+    std::stringstream sbuf;
+    sbuf << message.to_string();
+    std::size_t off = 0;
+    msgpack::unpack(result, sbuf.str().data(), sbuf.str().size(), off);
+    result.get().convert(msg);
+
+    // handle the ACCOUNT_LIST_RESPONSE message
+    if (msg.id == MSG_ID::ACCOUNT_LIST_RESPONSE) {
+
+        // parse the ACCOUNT_LIST_RESPONSE
+        ACCOUNT_LIST_RESPONSE account_list_response;
+        msg.msg.convert(account_list_response);
+
+        // print the ACCOUNT_LIST_RESPONSE
+        std::cout << "[client] received ACCOUNT_LIST_RESPONSE\n";
+        for (const auto &account: account_list_response.accounts) {
+            std::cout << "        account.iban:" << account.iban;
+            std::cout << ", account.user:" << unsigned(account.user);
+            std::cout << ", account.bank:" << unsigned(account.bank);
+            std::cout.precision(2);
+            std::cout << std::fixed;
+            std::cout << ", account.balance:" << account.balance << "\n";
+        }
+
+    } else {
+        std::cout << "[client] received unknown message\n";
+    }
+
+    /*
+
     // create a LOGOUT_REQUEST message
     LOGOUT_REQUEST logout_request;
     logout_request.user = "aylin.yilmaz42@gmail.com";
@@ -90,8 +143,6 @@ int main(int argc, char *argv[]) {
     } else {
         std::cout << "[client] received unknown message\n";
     }
-
-    /*
 
     // create a LOGIN_REQUEST message
     LOGIN_REQUEST login_request;

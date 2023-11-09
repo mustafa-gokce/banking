@@ -295,6 +295,65 @@ int main(int argc, char *argv[]) {
                 std::cout << "[server] sent BANK_LIST_RESPONSE\n";
 
             }
+
+            // handle the ACCOUNT_LIST_REQUEST message
+            else if (msg.id == MSG_ID::ACCOUNT_LIST_REQUEST) {
+
+                // parse the ACCOUNT_LIST_REQUEST
+                ACCOUNT_LIST_REQUEST account_list_request;
+                msg.msg.convert(account_list_request);
+                std::cout << "[server] got ACCOUNT_LIST_REQUEST\n";
+
+                // create a ACCOUNT_LIST_RESPONSE
+                ACCOUNT_LIST_RESPONSE account_list_response;
+
+                // check if the user has already logged in and the token is valid
+                int token_index = -1;
+                for (int i = 0; i < user_sessions.size(); i++) {
+                    if (user_sessions[i].id == account_list_request.user) {
+                        if (user_sessions[i].token == account_list_request.token) {
+                            token_index = i;
+                        }
+                        break;
+                    }
+                }
+
+                // check if the user has already logged in
+                if (token_index != -1) {
+
+                    // get the accounts from the database
+                    sqlite3_stmt *stmt;
+                    std::string sql = "SELECT iban, user, bank, balance FROM accounts WHERE user = ? AND bank = ?";
+                    if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
+                        std::cout << "[server] can not prepare statement: " << sqlite3_errmsg(db) << "\n";
+                        continue;
+                    }
+
+                    // fill the ACCOUNT_LIST_RESPONSE
+                    sqlite3_bind_int(stmt, 1, (int) account_list_request.user);
+                    sqlite3_bind_int(stmt, 2, account_list_request.bank);
+                    while (sqlite3_step(stmt) == SQLITE_ROW) {
+                        Account account{};
+                        account.iban = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0));
+                        account.user = sqlite3_column_int(stmt, 1);
+                        account.bank = sqlite3_column_int(stmt, 2);
+                        account.balance = sqlite3_column_double(stmt, 3);
+                        account_list_response.accounts.push_back(account);
+                    }
+                    sqlite3_finalize(stmt);
+                }
+
+                // pack the ACCOUNT_LIST_RESPONSE
+                msg = MSG{MSG_ID::ACCOUNT_LIST_RESPONSE, msgpack::object(account_list_response, z)};
+
+                // send the ACCOUNT_LIST_RESPONSE
+                std::stringstream buffer;
+                msgpack::pack(buffer, msg);
+                const std::string payload = buffer.str();
+                sock.send(zmq::buffer(payload), zmq::send_flags::dontwait);
+                std::cout << "[server] sent ACCOUNT_LIST_RESPONSE\n";
+
+            }
         } catch (const std::exception &e) {
             std::cout << "[server] " << e.what() << "\n";
         }
