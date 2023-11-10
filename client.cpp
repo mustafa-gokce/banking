@@ -26,6 +26,12 @@ int main(int argc, char *argv[]) {
     // receive ping
     client.receive_ping();
 
+    // send bank list request
+    client.send_bank_list_request();
+
+    // receive bank list response
+    client.receive_bank_list_response();
+
     /*
 
     // create a TRANSACTION_REQUEST message
@@ -266,49 +272,6 @@ int main(int argc, char *argv[]) {
         std::cout << "        login_response.name:" << login_response.name << "\n";
         std::cout << "        login_response.user:" << login_response.user << "\n";
         std::cout << "        login_response.token:" << login_response.token << "\n";
-
-    } else {
-        std::cout << "[client] received unknown message\n";
-    }
-
-    // create a BANK_LIST_REQUEST message
-    BANK_LIST_REQUEST bank_list_request;
-
-    // pack the BANK_LIST_REQUEST message
-    msg = MSG{MSG_ID::BANK_LIST_REQUEST, msgpack::object(bank_list_request, z)};
-
-    // send the BANK_LIST_REQUEST message
-    std::stringstream buffer;
-    msgpack::pack(buffer, msg);
-    const std::string payload = buffer.str();
-    sock.send(zmq::buffer(payload), zmq::send_flags::dontwait);
-    std::cout << "[client] sent BANK_LIST_REQUEST\n";
-
-    // receive a message
-    zmq::message_t message;
-    (void) sock.recv(message);
-
-    // parse the message
-    msg = MSG{};
-    msgpack::unpacked result;
-    std::stringstream sbuf;
-    sbuf << message.to_string();
-    std::size_t off = 0;
-    msgpack::unpack(result, sbuf.str().data(), sbuf.str().size(), off);
-    result.get().convert(msg);
-
-    // handle the BANK_LIST_RESPONSE message
-    if (msg.id == MSG_ID::BANK_LIST_RESPONSE) {
-
-        // parse the BANK_LIST_RESPONSE
-        BANK_LIST_RESPONSE bank_list_response;
-        msg.msg.convert(bank_list_response);
-
-        // print the BANK_LIST_RESPONSE
-        std::cout << "[client] received BANK_LIST_RESPONSE\n";
-        for (const auto &bank: bank_list_response.banks) {
-            std::cout << "        bank.id:" << bank.id << ", " << "bank.name:" << bank.name << "\n";
-        }
 
     } else {
         std::cout << "[client] received unknown message\n";

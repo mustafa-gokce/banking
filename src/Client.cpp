@@ -109,4 +109,62 @@ namespace Client {
         std::cout << "        ping.server_time:" << ping.server_time << "\n";
     }
 
+    void Client::send_bank_list_request(BANK_LIST_REQUEST &bank_list_request) {
+
+        // pack the BANK_LIST_REQUEST message
+        _msg = MSG{MSG_ID::BANK_LIST_REQUEST, msgpack::object(bank_list_request, _z)};
+
+        // send the BANK_LIST_REQUEST message
+        std::stringstream buffer;
+        msgpack::pack(buffer, _msg);
+        const std::string payload = buffer.str();
+        _sock.send(zmq::buffer(payload), zmq::send_flags::dontwait);
+        std::cout << "[client] sent BANK_LIST_REQUEST\n";
+    }
+
+    void Client::send_bank_list_request() {
+
+        // create a BANK_LIST_REQUEST message
+        BANK_LIST_REQUEST bank_list_request;
+
+        // send the BANK_LIST_REQUEST message
+        send_bank_list_request(bank_list_request);
+    }
+
+    void Client::receive_bank_list_response(BANK_LIST_RESPONSE &bank_list_response) {
+
+        // receive a message
+        zmq::message_t message;
+        (void) _sock.recv(message);
+
+        // parse the message
+        _msg = MSG{};
+        msgpack::unpacked result;
+        std::stringstream sbuf;
+        sbuf << message.to_string();
+        std::size_t off = 0;
+        msgpack::unpack(result, sbuf.str().data(), sbuf.str().size(), off);
+        result.get().convert(_msg);
+
+        // handle the BANK_LIST_RESPONSE message
+        if (_msg.id == MSG_ID::BANK_LIST_RESPONSE) {
+
+            // parse the BANK_LIST_RESPONSE message
+            _msg.msg.convert(bank_list_response);
+        }
+    }
+
+    void Client::receive_bank_list_response() {
+
+        // receive a BANK_LIST_RESPONSE message
+        BANK_LIST_RESPONSE bank_list_response;
+        receive_bank_list_response(bank_list_response);
+
+        // print the BANK_LIST_RESPONSE
+        std::cout << "[client] received BANK_LIST_RESPONSE\n";
+        for (const auto &bank: bank_list_response.banks) {
+            std::cout << "        bank.id:" << bank.id << ", " << "bank.name:" << bank.name << "\n";
+        }
+    }
+
 } // Client

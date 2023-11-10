@@ -41,6 +41,18 @@ namespace Client {
         void receive_ping(PING &ping);
 
         /*
+         * Send a bank list request to the server.
+         */
+        void send_bank_list_request();
+        void send_bank_list_request(BANK_LIST_REQUEST &bank_list_request);
+
+        /*
+         * Receive a bank list response from the server.
+         */
+        void receive_bank_list_response();
+        void receive_bank_list_response(BANK_LIST_RESPONSE &bank_list_response);
+
+        /*
          * Destroys the client.
          */
         Client();
