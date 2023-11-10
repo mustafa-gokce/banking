@@ -46,6 +46,13 @@ int main(int argc, char *argv[]) {
     ACCOUNT_LIST_RESPONSE account_list_response;
     client.receive_account_list_response(account_list_response);
 
+    // send add balance request (like an ATM deposit)
+    client.send_add_balance_request(login_response.id, login_response.token, login_response.bank,
+                                    account_list_response.accounts[0].iban, 1000);
+
+    // receive add balance response
+    client.receive_add_balance_response();
+
     // send logout request
     client.send_logout_request(login_response.user, login_response.token);
 
@@ -100,54 +107,6 @@ int main(int argc, char *argv[]) {
         std::cout.precision(2);
         std::cout << std::fixed;
         std::cout << "        transaction_response.fee:" << transaction_response.fee << "\n";
-
-    } else {
-        std::cout << "[client] received unknown message\n";
-    }
-
-    // create an ADD_BALANCE_REQUEST message
-    ADD_BALANCE_REQUEST add_balance_request;
-    add_balance_request.user = 1;
-    add_balance_request.token = "KynVSJrWp3BLAlytnlVSOaTVa6zOUrup";
-    add_balance_request.bank = 1;
-    add_balance_request.iban = "TR6136876433976928";
-    add_balance_request.amount = (double_t) 100;
-
-    // pack the ADD_BALANCE_REQUEST message
-    msg = MSG{MSG_ID::ADD_BALANCE_REQUEST, msgpack::object(add_balance_request, z)};
-
-    // send the ADD_BALANCE_REQUEST message
-    std::stringstream buffer;
-    msgpack::pack(buffer, msg);
-    const std::string payload = buffer.str();
-    sock.send(zmq::buffer(payload), zmq::send_flags::dontwait);
-    std::cout << "[client] sent ADD_BALANCE_REQUEST\n";
-
-    // receive a message
-    zmq::message_t message;
-    (void) sock.recv(message);
-
-    // parse the message
-    msg = MSG{};
-    msgpack::unpacked result;
-    std::stringstream sbuf;
-    sbuf << message.to_string();
-    std::size_t off = 0;
-    msgpack::unpack(result, sbuf.str().data(), sbuf.str().size(), off);
-    result.get().convert(msg);
-
-    // handle the ADD_BALANCE_RESPONSE message
-    if (msg.id == MSG_ID::ADD_BALANCE_RESPONSE) {
-
-        // parse the ADD_BALANCE_RESPONSE
-        ADD_BALANCE_RESPONSE add_balance_response;
-        msg.msg.convert(add_balance_response);
-
-        // print the ADD_BALANCE_RESPONSE
-        std::cout << "[client] received ADD_BALANCE_RESPONSE\n";
-        std::cout.precision(2);
-        std::cout << std::fixed;
-        std::cout << "        add_balance_response.amount:" << add_balance_response.amount << "\n";
 
     } else {
         std::cout << "[client] received unknown message\n";

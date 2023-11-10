@@ -356,4 +356,68 @@ namespace Client {
         receive_account_list_response(account_list_response);
     }
 
+    void Client::send_add_balance_request(ADD_BALANCE_REQUEST &add_balance_request) {
+
+        // pack the ADD_BALANCE_REQUEST message
+        _msg = MSG{MSG_ID::ADD_BALANCE_REQUEST, msgpack::object(add_balance_request, _z)};
+
+        // send the ADD_BALANCE_REQUEST message
+        std::stringstream buffer;
+        msgpack::pack(buffer, _msg);
+        const std::string payload = buffer.str();
+        _sock.send(zmq::buffer(payload), zmq::send_flags::dontwait);
+        std::cout << "[client] sent ADD_BALANCE_REQUEST\n";
+    }
+
+    void Client::send_add_balance_request(const uint32_t &user, const std::string &token, const uint16_t &bank,
+                                          const std::string &iban, const double_t &amount) {
+
+        // create an ADD_BALANCE_REQUEST message
+        ADD_BALANCE_REQUEST add_balance_request;
+        add_balance_request.user = user;
+        add_balance_request.token = token;
+        add_balance_request.bank = bank;
+        add_balance_request.iban = iban;
+        add_balance_request.amount = amount;
+
+        // send the ADD_BALANCE_REQUEST message
+        send_add_balance_request(add_balance_request);
+    }
+
+    void Client::receive_add_balance_response(ADD_BALANCE_RESPONSE &add_balance_response) {
+
+        // receive a message
+        zmq::message_t message;
+        (void) _sock.recv(message);
+
+        // parse the message
+        _msg = MSG{};
+        msgpack::unpacked result;
+        std::stringstream sbuf;
+        sbuf << message.to_string();
+        std::size_t off = 0;
+        msgpack::unpack(result, sbuf.str().data(), sbuf.str().size(), off);
+        result.get().convert(_msg);
+
+        // handle the ADD_BALANCE_RESPONSE message
+        if (_msg.id == MSG_ID::ADD_BALANCE_RESPONSE) {
+
+            // parse the ADD_BALANCE_RESPONSE message
+            _msg.msg.convert(add_balance_response);
+        }
+    }
+
+    void Client::receive_add_balance_response() {
+
+        // receive an ADD_BALANCE_RESPONSE message
+        ADD_BALANCE_RESPONSE add_balance_response;
+        receive_add_balance_response(add_balance_response);
+
+        // print the ADD_BALANCE_RESPONSE
+        std::cout << "[client] received ADD_BALANCE_RESPONSE\n";
+        std::cout.precision(2);
+        std::cout << std::fixed;
+        std::cout << "        add_balance_response.amount:" << add_balance_response.amount << "\n";
+    }
+
 } // Client

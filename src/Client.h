@@ -91,6 +91,21 @@ namespace Client {
         [[maybe_unused]] void receive_account_list_response();
 
         /*
+         * Send an add balance request to the server.
+         * This is like a superuser adding balance to an IBAN.
+         * Or a user adding balance to his/her own IBAN using an ATM.
+         */
+        void send_add_balance_request(const uint32_t &user, const std::string &token, const uint16_t &bank,
+                                      const std::string &iban, const double_t &amount);
+        void send_add_balance_request(ADD_BALANCE_REQUEST &add_balance_request);
+
+        /*
+         * Receive an add balance response from the server.
+         */
+        void receive_add_balance_response();
+        void receive_add_balance_response(ADD_BALANCE_RESPONSE &add_balance_response);
+
+        /*
          * Destroys the client.
          */
         Client();
