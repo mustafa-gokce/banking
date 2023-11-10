@@ -1,7 +1,3 @@
-//
-// Created by m on 10.11.2023.
-//
-
 #ifndef BANKING_TOOLS_H
 #define BANKING_TOOLS_H
 

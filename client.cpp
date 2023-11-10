@@ -1,19 +1,7 @@
-#include <QApplication>
-#include <QPushButton>
-#include <iostream>
 #include "src/Messages.h"
-#include "src/Tools.h"
 #include "src/Client.h"
 
 int main(int argc, char *argv[]) {
-    /*
-    QApplication a(argc, argv);
-    QPushButton button("Hello world!", nullptr);
-    button.resize(200, 100);
-    button.show();
-    return QApplication::exec();
-     */
-
     // create client
     Client::Client client;
 
@@ -53,7 +41,7 @@ int main(int argc, char *argv[]) {
     // receive add balance response
     client.receive_add_balance_response();
 
-    // send transaction request (like sending money to another IBAN, consult accounts table in database for real IBANs)
+    // send transaction request (like sending money to another users IBAN, consult accounts table for real IBANs)
     client.send_transaction_request(login_response.id, login_response.token, login_response.bank,
                                     account_list_response.accounts[0].iban, "TR2543267363394138", 2500);
 

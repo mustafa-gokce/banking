@@ -4,20 +4,6 @@ cmake_minimum_required(VERSION 3.22.1)
 # set project name
 project(banking)
 
-# set compiler flags
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
-set(CMAKE_AUTOUIC ON)
-
-# find packages
-find_package(Qt6 COMPONENTS
-        Core
-        Gui
-        Widgets
-        REQUIRED
-)
-
 # create client executable
 add_executable(client
         client.cpp
@@ -27,9 +13,6 @@ add_executable(client
         src/Client.h
 )
 target_link_libraries(client
-        Qt::Core
-        Qt::Gui
-        Qt::Widgets
         zmq
         msgpackc
 )

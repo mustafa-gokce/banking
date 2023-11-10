@@ -1,7 +1,3 @@
-//
-// Created by m on 10.11.2023.
-//
-
 #include <iostream>
 #include <thread>
 #include <chrono>
