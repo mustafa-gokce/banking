@@ -173,6 +173,16 @@ int main(int argc, char *argv[]) {
                     std::cout << "[server] user << " << login_response.user << " logged in successfully\n";
                 }
 
+                // if login is not success clear fields
+                else {
+                    login_response.id = 0;
+                    login_response.bank = 0;
+                    login_response.citizen = 0;
+                    login_response.name = "";
+                    login_response.user = "";
+                    login_response.token = "";
+                }
+
                 // pack the LOGIN_RESPONSE
                 msg = MSG{MSG_ID::LOGIN_RESPONSE, msgpack::object(login_response, z)};
 
