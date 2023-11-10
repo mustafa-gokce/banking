@@ -66,6 +66,18 @@ namespace Client {
         [[maybe_unused]] void receive_login_response();
 
         /*
+         * Send a logout request to the server.
+         */
+        void send_logout_request(const std::string& user, const std::string& token);
+        void send_logout_request(LOGOUT_REQUEST &logout_request);
+
+        /*
+         * Receive a logout response from the server.
+         */
+        void receive_logout_response();
+        void receive_logout_response(LOGOUT_RESPONSE &logout_response);
+
+        /*
          * Destroys the client.
          */
         Client();

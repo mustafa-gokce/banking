@@ -232,4 +232,62 @@ namespace Client {
         receive_login_response(login_response);
     }
 
+    void Client::send_logout_request(LOGOUT_REQUEST &logout_request) {
+
+        // pack the LOGOUT_REQUEST message
+        _msg = MSG{MSG_ID::LOGOUT_REQUEST, msgpack::object(logout_request, _z)};
+
+        // send the LOGOUT_REQUEST message
+        std::stringstream buffer;
+        msgpack::pack(buffer, _msg);
+        const std::string payload = buffer.str();
+        _sock.send(zmq::buffer(payload), zmq::send_flags::dontwait);
+        std::cout << "[client] sent LOGOUT_REQUEST\n";
+    }
+
+    void Client::send_logout_request(const std::string &user, const std::string &token) {
+
+        // create a LOGOUT_REQUEST message
+        LOGOUT_REQUEST logout_request;
+        logout_request.user = user;
+        logout_request.token = token;
+
+        // send the LOGOUT_REQUEST message
+        send_logout_request(logout_request);
+    }
+
+    void Client::receive_logout_response(LOGOUT_RESPONSE &logout_response) {
+
+        // receive a message
+        zmq::message_t message;
+        (void) _sock.recv(message);
+
+        // parse the message
+        _msg = MSG{};
+        msgpack::unpacked result;
+        std::stringstream sbuf;
+        sbuf << message.to_string();
+        std::size_t off = 0;
+        msgpack::unpack(result, sbuf.str().data(), sbuf.str().size(), off);
+        result.get().convert(_msg);
+
+        // handle the LOGOUT_RESPONSE message
+        if (_msg.id == MSG_ID::LOGOUT_RESPONSE) {
+
+            // parse the LOGOUT_RESPONSE message
+            _msg.msg.convert(logout_response);
+        }
+    }
+
+    void Client::receive_logout_response() {
+
+        // receive a LOGOUT_RESPONSE message
+        LOGOUT_RESPONSE logout_response;
+        receive_logout_response(logout_response);
+
+        // print the LOGOUT_RESPONSE
+        std::cout << "[client] received LOGOUT_RESPONSE\n";
+        std::cout << "        logout_response.type:" << unsigned(logout_response.type) << "\n";
+    }
+
 } // Client

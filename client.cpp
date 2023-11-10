@@ -39,6 +39,12 @@ int main(int argc, char *argv[]) {
     LOGIN_RESPONSE login_response;
     client.receive_login_response(login_response);
 
+    // send logout request
+    client.send_logout_request(login_response.user, login_response.token);
+
+    // receive logout response
+    client.receive_logout_response();
+
     /*
 
     // create a TRANSACTION_REQUEST message
@@ -186,49 +192,6 @@ int main(int argc, char *argv[]) {
             std::cout << std::fixed;
             std::cout << ", account.balance:" << account.balance << "\n";
         }
-
-    } else {
-        std::cout << "[client] received unknown message\n";
-    }
-
-    // create a LOGOUT_REQUEST message
-    LOGOUT_REQUEST logout_request;
-    logout_request.user = "aylin.yilmaz42@gmail.com";
-    logout_request.token = "KynVSJrWp3BLAlytnlVSOaTVa6zOUrup";
-
-    // pack the LOGOUT_REQUEST message
-    msg = MSG{MSG_ID::LOGOUT_REQUEST, msgpack::object(logout_request, z)};
-
-    // send the LOGOUT_REQUEST message
-    std::stringstream buffer;
-    msgpack::pack(buffer, msg);
-    const std::string payload = buffer.str();
-    sock.send(zmq::buffer(payload), zmq::send_flags::dontwait);
-    std::cout << "[client] sent LOGOUT_REQUEST\n";
-
-    // receive a message
-    zmq::message_t message;
-    (void) sock.recv(message);
-
-    // parse the message
-    msg = MSG{};
-    msgpack::unpacked result;
-    std::stringstream sbuf;
-    sbuf << message.to_string();
-    std::size_t off = 0;
-    msgpack::unpack(result, sbuf.str().data(), sbuf.str().size(), off);
-    result.get().convert(msg);
-
-    // handle the LOGOUT_RESPONSE message
-    if (msg.id == MSG_ID::LOGOUT_RESPONSE) {
-
-        // parse the LOGOUT_RESPONSE
-        LOGOUT_RESPONSE logout_response;
-        msg.msg.convert(logout_response);
-
-        // print the LOGOUT_RESPONSE
-        std::cout << "[client] received LOGOUT_RESPONSE\n";
-        std::cout << "        logout_response.type:" << unsigned(logout_response.type) << "\n";
 
     } else {
         std::cout << "[client] received unknown message\n";
