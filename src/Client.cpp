@@ -290,4 +290,70 @@ namespace Client {
         std::cout << "        logout_response.type:" << unsigned(logout_response.type) << "\n";
     }
 
+    void Client::send_account_list_request(ACCOUNT_LIST_REQUEST &account_list_request) {
+
+        // pack the ACCOUNT_LIST_REQUEST message
+        _msg = MSG{MSG_ID::ACCOUNT_LIST_REQUEST, msgpack::object(account_list_request, _z)};
+
+        // send the ACCOUNT_LIST_REQUEST message
+        std::stringstream buffer;
+        msgpack::pack(buffer, _msg);
+        const std::string payload = buffer.str();
+        _sock.send(zmq::buffer(payload), zmq::send_flags::dontwait);
+        std::cout << "[client] sent ACCOUNT_LIST_REQUEST\n";
+    }
+
+    void Client::send_account_list_request(const uint32_t &user, const std::string &token, const uint16_t &bank) {
+
+        // create a ACCOUNT_LIST_REQUEST message
+        ACCOUNT_LIST_REQUEST account_list_request;
+        account_list_request.user = user;
+        account_list_request.token = token;
+        account_list_request.bank = bank;
+
+        // send the ACCOUNT_LIST_REQUEST message
+        send_account_list_request(account_list_request);
+    }
+
+    void Client::receive_account_list_response(ACCOUNT_LIST_RESPONSE &account_list_response) {
+
+        // receive a message
+        zmq::message_t message;
+        (void) _sock.recv(message);
+
+        // parse the message
+        _msg = MSG{};
+        msgpack::unpacked result;
+        std::stringstream sbuf;
+        sbuf << message.to_string();
+        std::size_t off = 0;
+        msgpack::unpack(result, sbuf.str().data(), sbuf.str().size(), off);
+        result.get().convert(_msg);
+
+        // handle the ACCOUNT_LIST_RESPONSE message
+        if (_msg.id == MSG_ID::ACCOUNT_LIST_RESPONSE) {
+
+            // parse the ACCOUNT_LIST_RESPONSE message
+            _msg.msg.convert(account_list_response);
+        }
+
+        // print the ACCOUNT_LIST_RESPONSE
+        std::cout << "[client] received ACCOUNT_LIST_RESPONSE\n";
+        for (const auto &account: account_list_response.accounts) {
+            std::cout << "        account.iban:" << account.iban;
+            std::cout << ", account.user:" << unsigned(account.user);
+            std::cout << ", account.bank:" << unsigned(account.bank);
+            std::cout.precision(2);
+            std::cout << std::fixed;
+            std::cout << ", account.balance:" << account.balance << "\n";
+        }
+    }
+
+    void Client::receive_account_list_response() {
+
+        // receive a ACCOUNT_LIST_RESPONSE message
+        ACCOUNT_LIST_RESPONSE account_list_response;
+        receive_account_list_response(account_list_response);
+    }
+
 } // Client

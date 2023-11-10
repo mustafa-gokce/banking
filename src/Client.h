@@ -78,6 +78,19 @@ namespace Client {
         void receive_logout_response(LOGOUT_RESPONSE &logout_response);
 
         /*
+         * Send an account list request to the server.
+         */
+        void send_account_list_request(const uint32_t &user, const std::string &token, const uint16_t &bank);
+        void send_account_list_request(ACCOUNT_LIST_REQUEST &account_list_request);
+
+        /*
+         * Receive an account list response from the server.
+         * Need to save account list for future requests.
+         */
+        void receive_account_list_response(ACCOUNT_LIST_RESPONSE &account_list_response);
+        [[maybe_unused]] void receive_account_list_response();
+
+        /*
          * Destroys the client.
          */
         Client();
