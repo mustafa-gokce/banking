@@ -359,13 +359,6 @@ int main(int argc, char *argv[]) {
                 msg.msg.convert(add_balance_request);
                 std::cout << "[server] got ADD_BALANCE_REQUEST\n";
 
-                // create an ADD_BALANCE_RESPONSE
-                ADD_BALANCE_RESPONSE add_balance_response;
-                add_balance_response.user = add_balance_request.user;
-                add_balance_response.token = add_balance_request.token;
-                add_balance_response.bank = add_balance_request.bank;
-                add_balance_response.iban = add_balance_request.iban;
-
                 // check if the user has already logged in and the token is valid
                 int token_index = -1;
                 for (int i = 0; i < user_sessions.size(); i++) {
@@ -377,8 +370,17 @@ int main(int argc, char *argv[]) {
                     }
                 }
 
+                // create an ADD_BALANCE_RESPONSE
+                ADD_BALANCE_RESPONSE add_balance_response;
+
                 // check if the user has already logged in
                 if (token_index != -1) {
+
+                    // fill the ADD_BALANCE_RESPONSE
+                    add_balance_response.user = add_balance_request.user;
+                    add_balance_response.token = add_balance_request.token;
+                    add_balance_response.bank = add_balance_request.bank;
+                    add_balance_response.iban = add_balance_request.iban;
 
                     // add the balance to the account
                     sqlite3_stmt *stmt;
