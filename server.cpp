@@ -170,7 +170,7 @@ int main(int argc, char *argv[]) {
 
                     // add the LOGIN_RESPONSE to the list of login responses
                     user_sessions.push_back(login_response);
-                    std::cout << "[server] user << " << login_response.user << " logged in successfully\n";
+                    std::cout << "[server] user " << login_response.user << " logged in successfully\n";
                 }
 
                 // if login is not success clear fields
