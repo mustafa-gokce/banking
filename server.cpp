@@ -605,6 +605,24 @@ int main(int argc, char *argv[]) {
                     // fill the TRANSACTION_RESPONSE
                     transaction_response.fee = fee;
                     transaction_response.token = random_string(32);
+
+                    // add the transaction to the database
+                    sql = "INSERT INTO transactions (token, source, destination, amount, fee) VALUES (?, ?, ?, ?, ?)";
+                    if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK)
+                    {
+                        std::cout << "[server] can not prepare statement: " << sqlite3_errmsg(db) << "\n";
+                        transaction_response.type = TRANSACTION_RESPONSE_TYPE::SERVER_ERROR;
+                    }
+                    sqlite3_bind_text(stmt, 1, transaction_response.token.c_str(), -1, SQLITE_STATIC);
+                    sqlite3_bind_text(stmt, 2, transaction_request.from.c_str(), -1, SQLITE_STATIC);
+                    sqlite3_bind_text(stmt, 3, transaction_request.to.c_str(), -1, SQLITE_STATIC);
+                    sqlite3_bind_double(stmt, 4, transaction_request.amount);
+                    sqlite3_bind_double(stmt, 5, fee);
+                    if (sqlite3_step(stmt) != SQLITE_DONE) {
+                        std::cout << "[server] can not insert transaction: " << sqlite3_errmsg(db) << "\n";
+                        transaction_response.type = TRANSACTION_RESPONSE_TYPE::SERVER_ERROR;
+                    }
+                    sqlite3_finalize(stmt);
                 }
 
                 // pack the TRANSACTION_RESPONSE
