@@ -512,7 +512,7 @@ int main(int argc, char *argv[]) {
                         std::cout << "[server] can not get bank: " << sqlite3_errmsg(db) << "\n";
                         transaction_response.type = TRANSACTION_RESPONSE_TYPE::INVALID_TO_IBAN;
                     }
-                    bank_from = sqlite3_column_int(stmt, 0);
+                    bank_to = sqlite3_column_int(stmt, 0);
                     sqlite3_finalize(stmt);
 
                     // from account and to account are not in the same bank
