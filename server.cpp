@@ -5,7 +5,7 @@
 #include <zmq.hpp>
 #include <msgpack.hpp>
 #include <sqlite3.h>
-#include "messages.h"
+#include "src/Messages.h"
 #include "src/Tools.h"
 
 int main(int argc, char *argv[]) {

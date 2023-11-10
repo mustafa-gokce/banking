@@ -1,12 +1,9 @@
 #include <QApplication>
 #include <QPushButton>
 #include <iostream>
-#include <thread>
-#include <chrono>
-#include <zmq.hpp>
-#include <msgpack.hpp>
-#include "messages.h"
+#include "src/Messages.h"
 #include "src/Tools.h"
+#include "src/Client.h"
 
 int main(int argc, char *argv[]) {
     /*
@@ -17,17 +14,27 @@ int main(int argc, char *argv[]) {
     return QApplication::exec();
      */
 
-    // create a msgpack zone
-    msgpack::zone z;
-    MSG msg;
+    // create client
+    Client::Client client;
 
-    // create a zmq context and socket
-    zmq::context_t ctx;
-    zmq::socket_t sock(ctx, zmq::socket_type::req);
-    sock.connect("tcp://127.0.0.1:2609");
+    // initialize client (connect to server)
+    client.initialize("tcp://127.0.0.1:2609");
 
-    // wait for a second for ZMQ to properly initialize
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    // send ping
+    client.send_ping();
+
+    // receive ping
+    PING ping;
+    client.receive_ping(ping);
+
+    // print the PING message
+    std::cout << "[client] received PING\n";
+    std::cout << "        ping.type:" << unsigned (ping.type) << "\n";
+    std::cout << "        ping.token:" << ping.token << "\n";
+    std::cout << "        ping.client_time:" << ping.client_time << "\n";
+    std::cout << "        ping.server_time:" << ping.server_time << "\n";
+
+    /*
 
     // create a TRANSACTION_REQUEST message
     TRANSACTION_REQUEST transaction_request;
@@ -79,8 +86,6 @@ int main(int argc, char *argv[]) {
     } else {
         std::cout << "[client] received unknown message\n";
     }
-
-    /*
 
     // create an ADD_BALANCE_REQUEST message
     ADD_BALANCE_REQUEST add_balance_request;
@@ -269,59 +274,6 @@ int main(int argc, char *argv[]) {
         std::cout << "        login_response.name:" << login_response.name << "\n";
         std::cout << "        login_response.user:" << login_response.user << "\n";
         std::cout << "        login_response.token:" << login_response.token << "\n";
-
-    } else {
-        std::cout << "[client] received unknown message\n";
-    }
-
-    // create a PING message
-    PING ping;
-    ping.type = PING_TYPE::CLIENT;
-    ping.client_time = std::chrono::duration_cast<std::chrono::milliseconds>(
-            std::chrono::system_clock::now().time_since_epoch()).count();
-    std::string random_token = Tools::Tools::random_string(32);
-    ping.token = random_token;
-
-    // pack the PING message
-    msg = MSG{MSG_ID::PING, msgpack::object(ping, z)};
-
-    // send the PING message
-    std::stringstream buffer;
-    msgpack::pack(buffer, msg);
-    const std::string payload = buffer.str();
-    sock.send(zmq::buffer(payload), zmq::send_flags::dontwait);
-    std::cout << "[client] sent PING\n";
-
-    // receive a message
-    zmq::message_t message;
-    (void) sock.recv(message);
-
-    // parse the message
-    msg = MSG{};
-    msgpack::unpacked result;
-    std::stringstream sbuf;
-    sbuf << message.to_string();
-    std::size_t off = 0;
-    msgpack::unpack(result, sbuf.str().data(), sbuf.str().size(), off);
-    result.get().convert(msg);
-
-    // handle the PING message
-    if (msg.id == MSG_ID::PING) {
-
-        // parse the PING message
-        ping = PING{};
-        msg.msg.convert(ping);
-
-        // check validity by comparing the token
-        bool ping_valid = ping.token == random_token;
-
-        // print the PING message
-        std::cout << "[client] received PING\n";
-        std::cout << "        ping.type:" << unsigned (ping.type) << "\n";
-        std::cout << "        ping.token:" << ping.token << "\n";
-        std::cout << "        ping.client_time:" << ping.client_time << "\n";
-        std::cout << "        ping.server_time:" << ping.server_time << "\n";
-        std::cout << "        ping_valid:" << std::boolalpha << ping_valid << "\n";
 
     } else {
         std::cout << "[client] received unknown message\n";
