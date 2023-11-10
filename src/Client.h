@@ -106,6 +106,19 @@ namespace Client {
         void receive_add_balance_response(ADD_BALANCE_RESPONSE &add_balance_response);
 
         /*
+         * Send a transaction request to the server.
+         */
+        void send_transaction_request(const uint32_t &user, const std::string &token, const uint16_t &bank,
+                                      const std::string &from, const std::string &to, const double_t &amount);
+        void send_transaction_request(TRANSACTION_REQUEST &transaction_request);
+
+        /*
+         * Receive a transaction response from the server.
+         */
+        void receive_transaction_response();
+        void receive_transaction_response(TRANSACTION_RESPONSE &transaction_response);
+
+        /*
          * Destroys the client.
          */
         Client();

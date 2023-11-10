@@ -53,66 +53,18 @@ int main(int argc, char *argv[]) {
     // receive add balance response
     client.receive_add_balance_response();
 
+    // send transaction request (like sending money to another IBAN, consult accounts table in database for real IBANs)
+    client.send_transaction_request(login_response.id, login_response.token, login_response.bank,
+                                    account_list_response.accounts[0].iban, "TR2543267363394138", 2500);
+
+    // receive transaction response
+    client.receive_transaction_response();
+
     // send logout request
     client.send_logout_request(login_response.user, login_response.token);
 
     // receive logout response
     client.receive_logout_response();
-
-    /*
-
-    // create a TRANSACTION_REQUEST message
-    TRANSACTION_REQUEST transaction_request;
-    transaction_request.user = 1;
-    transaction_request.token = "KynVSJrWp3BLAlytnlVSOaTVa6zOUrup";
-    transaction_request.bank = 1;
-    transaction_request.from = "TR6136876433976928";
-    transaction_request.to = "TR4721031995319313";
-    transaction_request.amount = (double_t) 1000;
-
-    // pack the TRANSACTION_REQUEST message
-    msg = MSG{MSG_ID::TRANSACTION_REQUEST, msgpack::object(transaction_request, z)};
-
-    // send the TRANSACTION_REQUEST message
-    std::stringstream buffer;
-    msgpack::pack(buffer, msg);
-    const std::string payload = buffer.str();
-    sock.send(zmq::buffer(payload), zmq::send_flags::dontwait);
-    std::cout << "[client] sent TRANSACTION_REQUEST\n";
-
-    // receive a message
-    zmq::message_t message;
-    (void) sock.recv(message);
-
-    // parse the message
-    msg = MSG{};
-    msgpack::unpacked result;
-    std::stringstream sbuf;
-    sbuf << message.to_string();
-    std::size_t off = 0;
-    msgpack::unpack(result, sbuf.str().data(), sbuf.str().size(), off);
-    result.get().convert(msg);
-
-    // handle the TRANSACTION_RESPONSE message
-    if (msg.id == MSG_ID::TRANSACTION_RESPONSE) {
-
-        // parse the TRANSACTION_RESPONSE
-        TRANSACTION_RESPONSE transaction_response;
-        msg.msg.convert(transaction_response);
-
-        // print the TRANSACTION_RESPONSE
-        std::cout << "[client] received TRANSACTION_RESPONSE\n";
-        std::cout << "        transaction_response.type:" << unsigned(transaction_response.type) << "\n";
-        std::cout << "        transaction_response.token:" << transaction_response.token << "\n";
-        std::cout.precision(2);
-        std::cout << std::fixed;
-        std::cout << "        transaction_response.fee:" << transaction_response.fee << "\n";
-
-    } else {
-        std::cout << "[client] received unknown message\n";
-    }
-
-    */
 
     // program ends as expected
     return 0;

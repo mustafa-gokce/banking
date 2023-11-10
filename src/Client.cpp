@@ -420,4 +420,71 @@ namespace Client {
         std::cout << "        add_balance_response.amount:" << add_balance_response.amount << "\n";
     }
 
+    void Client::send_transaction_request(TRANSACTION_REQUEST &transaction_request) {
+
+        // pack the TRANSACTION_REQUEST message
+        _msg = MSG{MSG_ID::TRANSACTION_REQUEST, msgpack::object(transaction_request, _z)};
+
+        // send the TRANSACTION_REQUEST message
+        std::stringstream buffer;
+        msgpack::pack(buffer, _msg);
+        const std::string payload = buffer.str();
+        _sock.send(zmq::buffer(payload), zmq::send_flags::dontwait);
+        std::cout << "[client] sent TRANSACTION_REQUEST\n";
+    }
+
+    void Client::send_transaction_request(const uint32_t &user, const std::string &token, const uint16_t &bank,
+                                          const std::string &from, const std::string &to, const double_t &amount) {
+
+        // create a TRANSACTION_REQUEST message
+        TRANSACTION_REQUEST transaction_request;
+        transaction_request.user = user;
+        transaction_request.token = token;
+        transaction_request.bank = bank;
+        transaction_request.from = from;
+        transaction_request.to = to;
+        transaction_request.amount = amount;
+
+        // send the TRANSACTION_REQUEST message
+        send_transaction_request(transaction_request);
+    }
+
+    void Client::receive_transaction_response(TRANSACTION_RESPONSE &transaction_response) {
+
+        // receive a message
+        zmq::message_t message;
+        (void) _sock.recv(message);
+
+        // parse the message
+        _msg = MSG{};
+        msgpack::unpacked result;
+        std::stringstream sbuf;
+        sbuf << message.to_string();
+        std::size_t off = 0;
+        msgpack::unpack(result, sbuf.str().data(), sbuf.str().size(), off);
+        result.get().convert(_msg);
+
+        // handle the TRANSACTION_RESPONSE message
+        if (_msg.id == MSG_ID::TRANSACTION_RESPONSE) {
+
+            // parse the TRANSACTION_RESPONSE message
+            _msg.msg.convert(transaction_response);
+        }
+    }
+
+    void Client::receive_transaction_response() {
+
+        // receive a TRANSACTION_RESPONSE message
+        TRANSACTION_RESPONSE transaction_response;
+        receive_transaction_response(transaction_response);
+
+        // print the TRANSACTION_RESPONSE
+        std::cout << "[client] received TRANSACTION_RESPONSE\n";
+        std::cout << "        transaction_response.type:" << unsigned(transaction_response.type) << "\n";
+        std::cout << "        transaction_response.token:" << transaction_response.token << "\n";
+        std::cout.precision(2);
+        std::cout << std::fixed;
+        std::cout << "        transaction_response.fee:" << transaction_response.fee << "\n";
+    }
+
 } // Client
