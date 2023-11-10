@@ -167,4 +167,69 @@ namespace Client {
         }
     }
 
+    void Client::send_login_request(LOGIN_REQUEST &login_request) {
+
+        // pack the LOGIN_REQUEST message
+        _msg = MSG{MSG_ID::LOGIN_REQUEST, msgpack::object(login_request, _z)};
+
+        // send the LOGIN_REQUEST message
+        std::stringstream buffer;
+        msgpack::pack(buffer, _msg);
+        const std::string payload = buffer.str();
+        _sock.send(zmq::buffer(payload), zmq::send_flags::dontwait);
+        std::cout << "[client] sent LOGIN_REQUEST\n";
+    }
+
+    void Client::send_login_request(const std::string& user, const std::string& pass, const uint16_t& bank) {
+
+        // create a LOGIN_REQUEST message
+        LOGIN_REQUEST login_request;
+        login_request.user = user;
+        login_request.pass = pass;
+        login_request.bank = bank;
+
+        // send the LOGIN_REQUEST message
+        send_login_request(login_request);
+    }
+
+    void Client::receive_login_response(LOGIN_RESPONSE &login_response) {
+
+        // receive a message
+        zmq::message_t message;
+        (void) _sock.recv(message);
+
+        // parse the message
+        _msg = MSG{};
+        msgpack::unpacked result;
+        std::stringstream sbuf;
+        sbuf << message.to_string();
+        std::size_t off = 0;
+        msgpack::unpack(result, sbuf.str().data(), sbuf.str().size(), off);
+        result.get().convert(_msg);
+
+        // handle the LOGIN_RESPONSE message
+        if (_msg.id == MSG_ID::LOGIN_RESPONSE) {
+
+            // parse the LOGIN_RESPONSE message
+            _msg.msg.convert(login_response);
+        }
+
+        // print the LOGIN_RESPONSE
+        std::cout << "[client] received LOGIN_RESPONSE\n";
+        std::cout << "        login_response.type:" << unsigned(login_response.type) << "\n";
+        std::cout << "        login_response.id:" << unsigned(login_response.id) << "\n";
+        std::cout << "        login_response.bank:" << unsigned(login_response.bank) << "\n";
+        std::cout << "        login_response.citizen:" << unsigned(login_response.citizen) << "\n";
+        std::cout << "        login_response.name:" << login_response.name << "\n";
+        std::cout << "        login_response.user:" << login_response.user << "\n";
+        std::cout << "        login_response.token:" << login_response.token << "\n";
+    }
+
+    [[maybe_unused]] void Client::receive_login_response() {
+
+        // receive a LOGIN_RESPONSE message
+        LOGIN_RESPONSE login_response;
+        receive_login_response(login_response);
+    }
+
 } // Client

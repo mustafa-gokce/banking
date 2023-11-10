@@ -53,6 +53,19 @@ namespace Client {
         void receive_bank_list_response(BANK_LIST_RESPONSE &bank_list_response);
 
         /*
+         * Send a login request to the server.
+         */
+        void send_login_request(const std::string& user, const std::string& pass, const uint16_t& bank);
+        void send_login_request(LOGIN_REQUEST &login_request);
+
+        /*
+         * Receive a login response from the server.
+         * Need to save token for future requests.
+         */
+        void receive_login_response(LOGIN_RESPONSE &login_response);
+        [[maybe_unused]] void receive_login_response();
+
+        /*
          * Destroys the client.
          */
         Client();

@@ -32,6 +32,13 @@ int main(int argc, char *argv[]) {
     // receive bank list response
     client.receive_bank_list_response();
 
+    // send login request
+    client.send_login_request("aylin.yilmaz42@gmail.com", "G3l!y@m!zP@ss", 1);
+
+    // receive login response (we need to create a LOGIN_RESPONSE object to hold login token)
+    LOGIN_RESPONSE login_response;
+    client.receive_login_response(login_response);
+
     /*
 
     // create a TRANSACTION_REQUEST message
@@ -222,56 +229,6 @@ int main(int argc, char *argv[]) {
         // print the LOGOUT_RESPONSE
         std::cout << "[client] received LOGOUT_RESPONSE\n";
         std::cout << "        logout_response.type:" << unsigned(logout_response.type) << "\n";
-
-    } else {
-        std::cout << "[client] received unknown message\n";
-    }
-
-    // create a LOGIN_REQUEST message
-    LOGIN_REQUEST login_request;
-    login_request.user = "aylin.yilmaz42@gmail.com";
-    login_request.pass = "G3l!y@m!zP@ss";
-    login_request.bank = 1;
-
-    // pack the LOGIN_REQUEST message
-    msg = MSG{MSG_ID::LOGIN_REQUEST, msgpack::object(login_request, z)};
-
-    // send the LOGIN_REQUEST message
-    std::stringstream buffer;
-    msgpack::pack(buffer, msg);
-    const std::string payload = buffer.str();
-    sock.send(zmq::buffer(payload), zmq::send_flags::dontwait);
-    std::cout << "[client] sent LOGIN_REQUEST\n";
-
-    // receive a message
-    zmq::message_t message;
-    (void) sock.recv(message);
-
-    // parse the message
-    msg = MSG{};
-    msgpack::unpacked result;
-    std::stringstream sbuf;
-    sbuf << message.to_string();
-    std::size_t off = 0;
-    msgpack::unpack(result, sbuf.str().data(), sbuf.str().size(), off);
-    result.get().convert(msg);
-
-    // handle the LOGIN_RESPONSE message
-    if (msg.id == MSG_ID::LOGIN_RESPONSE) {
-
-        // parse the LOGIN_RESPONSE
-        LOGIN_RESPONSE login_response;
-        msg.msg.convert(login_response);
-
-        // print the LOGIN_RESPONSE
-        std::cout << "[client] received LOGIN_RESPONSE\n";
-        std::cout << "        login_response.type:" << unsigned(login_response.type) << "\n";
-        std::cout << "        login_response.id:" << unsigned(login_response.id) << "\n";
-        std::cout << "        login_response.bank:" << unsigned(login_response.bank) << "\n";
-        std::cout << "        login_response.citizen:" << unsigned(login_response.citizen) << "\n";
-        std::cout << "        login_response.name:" << login_response.name << "\n";
-        std::cout << "        login_response.user:" << login_response.user << "\n";
-        std::cout << "        login_response.token:" << login_response.token << "\n";
 
     } else {
         std::cout << "[client] received unknown message\n";
