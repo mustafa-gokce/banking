@@ -175,12 +175,9 @@ int main(int argc, char *argv[]) {
 
                 // if login is not success clear fields
                 else {
-                    login_response.id = 0;
-                    login_response.bank = 0;
-                    login_response.citizen = 0;
-                    login_response.name = "";
-                    login_response.user = "";
-                    login_response.token = "";
+                    LOGIN_RESPONSE_TYPE login_response_type = login_response.type;
+                    login_response = LOGIN_RESPONSE{};
+                    login_response.type = login_response_type;
                 }
 
                 // pack the LOGIN_RESPONSE
