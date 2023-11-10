@@ -32,10 +32,12 @@ namespace Client {
          * Send ping to the server.
          */
         void send_ping();
+        void send_ping(PING &ping);
 
         /*
          * Receive a ping from the server.
          */
+        void receive_ping();
         void receive_ping(PING &ping);
 
         /*

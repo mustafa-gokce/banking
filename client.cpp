@@ -24,15 +24,7 @@ int main(int argc, char *argv[]) {
     client.send_ping();
 
     // receive ping
-    PING ping;
-    client.receive_ping(ping);
-
-    // print the PING message
-    std::cout << "[client] received PING\n";
-    std::cout << "        ping.type:" << unsigned (ping.type) << "\n";
-    std::cout << "        ping.token:" << ping.token << "\n";
-    std::cout << "        ping.client_time:" << ping.client_time << "\n";
-    std::cout << "        ping.server_time:" << ping.server_time << "\n";
+    client.receive_ping();
 
     /*
 

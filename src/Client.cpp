@@ -45,15 +45,7 @@ namespace Client {
         }
     }
 
-    void Client::send_ping() {
-
-        // create a PING message
-        PING ping;
-        ping.type = PING_TYPE::CLIENT;
-        ping.client_time = std::chrono::duration_cast<std::chrono::milliseconds>(
-                std::chrono::system_clock::now().time_since_epoch()).count();
-        std::string random_token = Tools::Tools::random_string(32);
-        ping.token = random_token;
+    void Client::send_ping(PING &ping) {
 
         // pack the PING message
         _msg = MSG{MSG_ID::PING, msgpack::object(ping, _z)};
@@ -64,7 +56,20 @@ namespace Client {
         const std::string payload = buffer.str();
         _sock.send(zmq::buffer(payload), zmq::send_flags::dontwait);
         std::cout << "[client] sent PING\n";
+    }
 
+    void Client::send_ping() {
+
+        // create a PING message
+        PING ping;
+        ping.type = PING_TYPE::CLIENT;
+        ping.client_time = std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::system_clock::now().time_since_epoch()).count();
+        std::string random_token = Tools::Tools::random_string(32);
+        ping.token = random_token;
+
+        // send the PING message
+        send_ping(ping);
     }
 
     void Client::receive_ping(PING &ping) {
@@ -88,6 +93,20 @@ namespace Client {
             // parse the PING message
             _msg.msg.convert(ping);
         }
+    }
+
+    void Client::receive_ping() {
+
+        // receive a PING message
+        PING ping;
+        receive_ping(ping);
+
+        // print the PING message
+        std::cout << "[client] received PING\n";
+        std::cout << "        ping.type:" << unsigned (ping.type) << "\n";
+        std::cout << "        ping.token:" << ping.token << "\n";
+        std::cout << "        ping.client_time:" << ping.client_time << "\n";
+        std::cout << "        ping.server_time:" << ping.server_time << "\n";
     }
 
 } // Client
