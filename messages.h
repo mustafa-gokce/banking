@@ -212,12 +212,13 @@ class ADD_BALANCE_RESPONSE : public ADD_BALANCE_REQUEST {
  */
 class TRANSACTION_REQUEST {
 public:
-    std::string user{};
+    uint32_t user{};
     std::string token{};
+    uint16_t bank{};
     std::string from{};
     std::string to{};
     double_t amount{};
-    MSGPACK_DEFINE (user, token, from, to, amount);
+    MSGPACK_DEFINE (user, token, bank, from, to, amount);
 };
 
 /*

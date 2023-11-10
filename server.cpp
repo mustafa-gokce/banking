@@ -425,6 +425,199 @@ int main(int argc, char *argv[]) {
                 }
             }
 
+            // handle the TRANSACTION_REQUEST message
+            else if (msg.id == MSG_ID::TRANSACTION_REQUEST) {
+
+                // parse the TRANSACTION_REQUEST
+                TRANSACTION_REQUEST transaction_request;
+                msg.msg.convert(transaction_request);
+                std::cout << "[server] got TRANSACTION_REQUEST\n";
+
+                // create a TRANSACTION_RESPONSE
+                TRANSACTION_RESPONSE transaction_response;
+                transaction_response.type = TRANSACTION_RESPONSE_TYPE::NOT_LOGGED_IN;
+
+                // check if the user has already logged in and the token is valid
+                int user_index = -1;
+                for (auto & user_session : user_sessions) {
+                    if (user_session.id == transaction_request.user) {
+                        if (user_session.token == transaction_request.token) {
+                            transaction_response.type = TRANSACTION_RESPONSE_TYPE::TRANSACTION_SUCCESS;
+                            break;
+                        }
+                        transaction_response.type = TRANSACTION_RESPONSE_TYPE::INVALID_TOKEN;
+                        break;
+                    }
+                }
+
+                // check if amount is positive
+                if (transaction_response.type == TRANSACTION_RESPONSE_TYPE::TRANSACTION_SUCCESS) {
+                    if (transaction_request.amount <= 0) {
+                        std::cout << "[server] amount is not positive\n";
+                        transaction_response.type = TRANSACTION_RESPONSE_TYPE::INVALID_AMOUNT;
+                    }
+                }
+
+                // check if from account exists
+                if (transaction_response.type == TRANSACTION_RESPONSE_TYPE::TRANSACTION_SUCCESS) {
+                    sqlite3_stmt *stmt;
+                    std::string sql = "SELECT balance FROM accounts WHERE iban = ? AND user = ? AND bank = ?";
+                    if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
+                        std::cout << "[server] can not prepare statement: " << sqlite3_errmsg(db) << "\n";
+                        transaction_response.type = TRANSACTION_RESPONSE_TYPE::SERVER_ERROR;
+                    }
+                    sqlite3_bind_text(stmt, 1, transaction_request.from.c_str(), -1, SQLITE_STATIC);
+                    sqlite3_bind_int(stmt, 2, (int) transaction_request.user);
+                    sqlite3_bind_int(stmt, 3, transaction_request.bank);
+                    if (sqlite3_step(stmt) != SQLITE_ROW) {
+                        std::cout << "[server] from account not found: " << sqlite3_errmsg(db) << "\n";
+                        transaction_response.type = TRANSACTION_RESPONSE_TYPE::INVALID_FROM_IBAN;
+                    }
+                    sqlite3_finalize(stmt);
+                }
+
+                // check if to account exists
+                if (transaction_response.type == TRANSACTION_RESPONSE_TYPE::TRANSACTION_SUCCESS) {
+                    sqlite3_stmt *stmt;
+                    std::string sql = "SELECT balance FROM accounts WHERE iban = ?";
+                    if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
+                        std::cout << "[server] can not prepare statement: " << sqlite3_errmsg(db) << "\n";
+                        transaction_response.type = TRANSACTION_RESPONSE_TYPE::SERVER_ERROR;
+                    }
+                    sqlite3_bind_text(stmt, 1, transaction_request.to.c_str(), -1, SQLITE_STATIC);
+                    if (sqlite3_step(stmt) != SQLITE_ROW) {
+                        std::cout << "[server] can not get balance: " << sqlite3_errmsg(db) << "\n";
+                        transaction_response.type = TRANSACTION_RESPONSE_TYPE::INVALID_TO_IBAN;
+                    }
+                    sqlite3_finalize(stmt);
+                }
+
+                // if from account and to account are in the same bank or not apply fee
+                float_t fee = 0.0;
+                if (transaction_response.type == TRANSACTION_RESPONSE_TYPE::TRANSACTION_SUCCESS) {
+                    uint16_t bank_from, bank_to;
+
+                    // get from bank
+                    sqlite3_stmt *stmt;
+                    std::string sql = "SELECT bank FROM accounts WHERE iban = ?";
+                    if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
+                        std::cout << "[server] can not prepare statement: " << sqlite3_errmsg(db) << "\n";
+                        transaction_response.type = TRANSACTION_RESPONSE_TYPE::SERVER_ERROR;
+                    }
+                    sqlite3_bind_text(stmt, 1, transaction_request.from.c_str(), -1, SQLITE_STATIC);
+                    if (sqlite3_step(stmt) != SQLITE_ROW) {
+                        std::cout << "[server] can not get bank: " << sqlite3_errmsg(db) << "\n";
+                        transaction_response.type = TRANSACTION_RESPONSE_TYPE::INVALID_FROM_IBAN;
+                    }
+                    bank_from = sqlite3_column_int(stmt, 0);
+                    sqlite3_finalize(stmt);
+
+                    // get to bank
+                    sql = "SELECT bank FROM accounts WHERE iban = ?";
+                    if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
+                        std::cout << "[server] can not prepare statement: " << sqlite3_errmsg(db) << "\n";
+                        transaction_response.type = TRANSACTION_RESPONSE_TYPE::SERVER_ERROR;
+                    }
+                    sqlite3_bind_text(stmt, 1, transaction_request.to.c_str(), -1, SQLITE_STATIC);
+                    if (sqlite3_step(stmt) != SQLITE_ROW) {
+                        std::cout << "[server] can not get bank: " << sqlite3_errmsg(db) << "\n";
+                        transaction_response.type = TRANSACTION_RESPONSE_TYPE::INVALID_TO_IBAN;
+                    }
+                    bank_from = sqlite3_column_int(stmt, 0);
+                    sqlite3_finalize(stmt);
+
+                    // from account and to account are not in the same bank
+                    if (bank_from != bank_to) {
+
+                        // get the fee from the database
+                        sql = "SELECT fee FROM banks WHERE id = ?";
+                        if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
+                            std::cout << "[server] can not prepare statement: " << sqlite3_errmsg(db) << "\n";
+                            transaction_response.type = TRANSACTION_RESPONSE_TYPE::SERVER_ERROR;
+                        }
+                        sqlite3_bind_int(stmt, 1, bank_from);
+                        if (sqlite3_step(stmt) != SQLITE_ROW) {
+                            std::cout << "[server] can not get fee: " << sqlite3_errmsg(db) << "\n";
+                            transaction_response.type = TRANSACTION_RESPONSE_TYPE::SERVER_ERROR;
+                        }
+                        fee = (float_t) sqlite3_column_double(stmt, 0);
+                        sqlite3_finalize(stmt);
+                    }
+                }
+
+                // check if from account has enough balance
+                if (transaction_response.type == TRANSACTION_RESPONSE_TYPE::TRANSACTION_SUCCESS) {
+                    sqlite3_stmt *stmt;
+                    std::string sql = "SELECT balance FROM accounts WHERE iban = ? AND user = ? AND bank = ?";
+                    if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
+                        std::cout << "[server] can not prepare statement: " << sqlite3_errmsg(db) << "\n";
+                        transaction_response.type = TRANSACTION_RESPONSE_TYPE::SERVER_ERROR;
+                    }
+                    sqlite3_bind_text(stmt, 1, transaction_request.from.c_str(), -1, SQLITE_STATIC);
+                    sqlite3_bind_int(stmt, 2, (int) transaction_request.user);
+                    sqlite3_bind_int(stmt, 3, transaction_request.bank);
+                    if (sqlite3_step(stmt) != SQLITE_ROW) {
+                        std::cout << "[server] from account not found: " << sqlite3_errmsg(db) << "\n";
+                        transaction_response.type = TRANSACTION_RESPONSE_TYPE::INVALID_FROM_IBAN;
+                    }
+                    if (sqlite3_column_double(stmt, 0) < transaction_request.amount + fee) {
+                        std::cout << "[server] insufficient funds\n";
+                        transaction_response.type = TRANSACTION_RESPONSE_TYPE::INSUFFICIENT_FUNDS;
+                    }
+                    sqlite3_finalize(stmt);
+                }
+
+                // if transaction is success update the balance of the accounts
+                if (transaction_response.type == TRANSACTION_RESPONSE_TYPE::TRANSACTION_SUCCESS) {
+
+                    // update the balance of from account
+                    sqlite3_stmt *stmt;
+                    std::string sql = "UPDATE accounts SET balance = balance - ? WHERE iban = ? AND user = ? AND bank = ?";
+                    if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
+                        std::cout << "[server] can not prepare statement: " << sqlite3_errmsg(db) << "\n";
+                        transaction_response.type = TRANSACTION_RESPONSE_TYPE::SERVER_ERROR;
+                    }
+                    sqlite3_bind_double(stmt, 1, transaction_request.amount + fee);
+                    sqlite3_bind_text(stmt, 2, transaction_request.from.c_str(), -1, SQLITE_STATIC);
+                    sqlite3_bind_int(stmt, 3, (int) transaction_request.user);
+                    sqlite3_bind_int(stmt, 4, transaction_request.bank);
+                    if (sqlite3_step(stmt) != SQLITE_DONE) {
+                        std::cout << "[server] can not update balance: " << sqlite3_errmsg(db) << "\n";
+                        transaction_response.type = TRANSACTION_RESPONSE_TYPE::SERVER_ERROR;
+                    }
+                    sqlite3_finalize(stmt);
+
+                    // update the balance of the to account
+                    sql = "UPDATE accounts SET balance = balance + ? WHERE iban = ?";
+                    if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK)
+                    {
+                        std::cout << "[server] can not prepare statement: " << sqlite3_errmsg(db) << "\n";
+                        transaction_response.type = TRANSACTION_RESPONSE_TYPE::SERVER_ERROR;
+                    }
+                    sqlite3_bind_double(stmt, 1, transaction_request.amount);
+                    sqlite3_bind_text(stmt, 2, transaction_request.to.c_str(), -1, SQLITE_STATIC);
+                    if (sqlite3_step(stmt) != SQLITE_DONE) {
+                        std::cout << "[server] can not update balance: " << sqlite3_errmsg(db) << "\n";
+                        transaction_response.type = TRANSACTION_RESPONSE_TYPE::SERVER_ERROR;
+                    }
+                    sqlite3_finalize(stmt);
+
+                    // fill the TRANSACTION_RESPONSE
+                    transaction_response.fee = fee;
+                    transaction_response.token = random_string(32);
+                }
+
+                // pack the TRANSACTION_RESPONSE
+                msg = MSG{MSG_ID::TRANSACTION_RESPONSE, msgpack::object(transaction_response, z)};
+
+                // send the TRANSACTION_RESPONSE
+                std::stringstream buffer;
+                msgpack::pack(buffer, msg);
+                const std::string payload = buffer.str();
+                sock.send(zmq::buffer(payload), zmq::send_flags::dontwait);
+                std::cout << "[server] sent TRANSACTION_RESPONSE\n";
+            }
+
         } catch (const std::exception &e) {
             std::cout << "[server] " << e.what() << "\n";
         }
