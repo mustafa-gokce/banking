@@ -21,6 +21,8 @@ find_package(Qt6 COMPONENTS
 # create client executable
 add_executable(client
         client.cpp
+        Tools.h
+        Tools.cpp
 )
 target_link_libraries(client
         Qt::Core
@@ -33,6 +35,8 @@ target_link_libraries(client
 # create server executable
 add_executable(server
         server.cpp
+        Tools.h
+        Tools.cpp
 )
 target_link_libraries(server
         zmq

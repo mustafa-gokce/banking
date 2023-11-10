@@ -1,4 +1,3 @@
-#include <random>
 #include <string>
 #include <iostream>
 #include <thread>
@@ -7,24 +6,7 @@
 #include <msgpack.hpp>
 #include <sqlite3.h>
 #include "messages.h"
-
-std::string random_string(std::string::size_type length) {
-    static auto &chars = "0123456789"
-                         "abcdefghijklmnopqrstuvwxyz"
-                         "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
-    thread_local static std::mt19937 rg{std::random_device{}()};
-    thread_local static std::uniform_int_distribution<std::string::size_type> pick(0, sizeof(chars) - 2);
-
-    std::string s;
-
-    s.reserve(length);
-
-    while (length--)
-        s += chars[pick(rg)];
-
-    return s;
-}
+#include "Tools.h"
 
 int main(int argc, char *argv[]) {
 
@@ -184,7 +166,7 @@ int main(int argc, char *argv[]) {
                 if (login_response.type == LOGIN_RESPONSE_TYPE::LOGIN_SUCCESS) {
 
                     // generate a random token
-                    login_response.token = random_string(32);
+                    login_response.token = Tools::Tools::random_string(32);
 
                     // add the LOGIN_RESPONSE to the list of login responses
                     user_sessions.push_back(login_response);
@@ -604,7 +586,7 @@ int main(int argc, char *argv[]) {
 
                     // fill the TRANSACTION_RESPONSE
                     transaction_response.fee = fee;
-                    transaction_response.token = random_string(32);
+                    transaction_response.token = Tools::Tools::random_string(32);
 
                     // add the transaction to the database
                     sql = "INSERT INTO transactions (token, source, destination, amount, fee) VALUES (?, ?, ?, ?, ?)";

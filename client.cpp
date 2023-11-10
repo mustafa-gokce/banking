@@ -1,5 +1,3 @@
-#include <random>
-#include <string>
 #include <QApplication>
 #include <QPushButton>
 #include <iostream>
@@ -8,24 +6,7 @@
 #include <zmq.hpp>
 #include <msgpack.hpp>
 #include "messages.h"
-
-std::string random_string(std::string::size_type length) {
-    static auto &chars = "0123456789"
-                         "abcdefghijklmnopqrstuvwxyz"
-                         "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
-    thread_local static std::mt19937 rg{std::random_device{}()};
-    thread_local static std::uniform_int_distribution<std::string::size_type> pick(0, sizeof(chars) - 2);
-
-    std::string s;
-
-    s.reserve(length);
-
-    while (length--)
-        s += chars[pick(rg)];
-
-    return s;
-}
+#include "Tools.h"
 
 int main(int argc, char *argv[]) {
     /*
@@ -298,7 +279,7 @@ int main(int argc, char *argv[]) {
     ping.type = PING_TYPE::CLIENT;
     ping.client_time = std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::system_clock::now().time_since_epoch()).count();
-    std::string random_token = random_string(32);
+    std::string random_token = Tools::Tools::random_string(32);
     ping.token = random_token;
 
     // pack the PING message
