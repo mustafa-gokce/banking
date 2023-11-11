@@ -22,6 +22,8 @@ add_executable(server
         server.cpp
         src/Tools.cpp
         src/Tools.h
+        src/Server.cpp
+        src/Server.h
 )
 target_link_libraries(server
         zmq
