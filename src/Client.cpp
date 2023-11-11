@@ -68,17 +68,7 @@ namespace Client {
     void Client::receive_ping(PING &ping) {
 
         // receive a message
-        zmq::message_t message;
-        (void) _sock.recv(message);
-
-        // parse the message
-        _msg = MSG{};
-        msgpack::unpacked result;
-        std::stringstream sbuf;
-        sbuf << message.to_string();
-        std::size_t off = 0;
-        msgpack::unpack(result, sbuf.str().data(), sbuf.str().size(), off);
-        result.get().convert(_msg);
+        _receive_message();
 
         // handle the PING message
         if (_msg.id == MSG_ID::PING) {
@@ -124,17 +114,7 @@ namespace Client {
     void Client::receive_bank_list_response(BANK_LIST_RESPONSE &bank_list_response) {
 
         // receive a message
-        zmq::message_t message;
-        (void) _sock.recv(message);
-
-        // parse the message
-        _msg = MSG{};
-        msgpack::unpacked result;
-        std::stringstream sbuf;
-        sbuf << message.to_string();
-        std::size_t off = 0;
-        msgpack::unpack(result, sbuf.str().data(), sbuf.str().size(), off);
-        result.get().convert(_msg);
+        _receive_message();
 
         // handle the BANK_LIST_RESPONSE message
         if (_msg.id == MSG_ID::BANK_LIST_RESPONSE) {
@@ -182,17 +162,7 @@ namespace Client {
     void Client::receive_login_response(LOGIN_RESPONSE &login_response) {
 
         // receive a message
-        zmq::message_t message;
-        (void) _sock.recv(message);
-
-        // parse the message
-        _msg = MSG{};
-        msgpack::unpacked result;
-        std::stringstream sbuf;
-        sbuf << message.to_string();
-        std::size_t off = 0;
-        msgpack::unpack(result, sbuf.str().data(), sbuf.str().size(), off);
-        result.get().convert(_msg);
+        _receive_message();
 
         // handle the LOGIN_RESPONSE message
         if (_msg.id == MSG_ID::LOGIN_RESPONSE) {
@@ -243,17 +213,7 @@ namespace Client {
     void Client::receive_logout_response(LOGOUT_RESPONSE &logout_response) {
 
         // receive a message
-        zmq::message_t message;
-        (void) _sock.recv(message);
-
-        // parse the message
-        _msg = MSG{};
-        msgpack::unpacked result;
-        std::stringstream sbuf;
-        sbuf << message.to_string();
-        std::size_t off = 0;
-        msgpack::unpack(result, sbuf.str().data(), sbuf.str().size(), off);
-        result.get().convert(_msg);
+        _receive_message();
 
         // handle the LOGOUT_RESPONSE message
         if (_msg.id == MSG_ID::LOGOUT_RESPONSE) {
@@ -299,17 +259,7 @@ namespace Client {
     void Client::receive_account_list_response(ACCOUNT_LIST_RESPONSE &account_list_response) {
 
         // receive a message
-        zmq::message_t message;
-        (void) _sock.recv(message);
-
-        // parse the message
-        _msg = MSG{};
-        msgpack::unpacked result;
-        std::stringstream sbuf;
-        sbuf << message.to_string();
-        std::size_t off = 0;
-        msgpack::unpack(result, sbuf.str().data(), sbuf.str().size(), off);
-        result.get().convert(_msg);
+        _receive_message();
 
         // handle the ACCOUNT_LIST_RESPONSE message
         if (_msg.id == MSG_ID::ACCOUNT_LIST_RESPONSE) {
@@ -365,17 +315,7 @@ namespace Client {
     void Client::receive_add_balance_response(ADD_BALANCE_RESPONSE &add_balance_response) {
 
         // receive a message
-        zmq::message_t message;
-        (void) _sock.recv(message);
-
-        // parse the message
-        _msg = MSG{};
-        msgpack::unpacked result;
-        std::stringstream sbuf;
-        sbuf << message.to_string();
-        std::size_t off = 0;
-        msgpack::unpack(result, sbuf.str().data(), sbuf.str().size(), off);
-        result.get().convert(_msg);
+        _receive_message();
 
         // handle the ADD_BALANCE_RESPONSE message
         if (_msg.id == MSG_ID::ADD_BALANCE_RESPONSE) {
@@ -427,17 +367,7 @@ namespace Client {
     void Client::receive_transaction_response(TRANSACTION_RESPONSE &transaction_response) {
 
         // receive a message
-        zmq::message_t message;
-        (void) _sock.recv(message);
-
-        // parse the message
-        _msg = MSG{};
-        msgpack::unpacked result;
-        std::stringstream sbuf;
-        sbuf << message.to_string();
-        std::size_t off = 0;
-        msgpack::unpack(result, sbuf.str().data(), sbuf.str().size(), off);
-        result.get().convert(_msg);
+        _receive_message();
 
         // handle the TRANSACTION_RESPONSE message
         if (_msg.id == MSG_ID::TRANSACTION_RESPONSE) {
@@ -471,6 +401,26 @@ namespace Client {
 
         // send the message
         _sock.send(zmq::buffer(payload), zmq::send_flags::dontwait);
+    }
+
+    void Client::_receive_message() {
+
+        // receive a message
+        zmq::message_t message;
+        (void) _sock.recv(message);
+
+        // clear the message
+        _msg = MSG{};
+
+        // unpack the message
+        msgpack::unpacked result;
+        std::stringstream sbuf;
+        sbuf << message.to_string();
+        std::size_t off = 0;
+        msgpack::unpack(result, sbuf.str().data(), sbuf.str().size(), off);
+
+        // convert msgpack::object to MSG
+        result.get().convert(_msg);
     }
 
 } // Client

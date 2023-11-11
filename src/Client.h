@@ -135,6 +135,11 @@ namespace Client {
          * Sends a message to the server.
          */
         void _send_message();
+
+        /*
+         * Receives a message from the server.
+         */
+        void _receive_message();
     };
 
 } // Client
