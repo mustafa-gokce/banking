@@ -48,7 +48,7 @@ namespace Client {
 
         // send the PING message
         _send_message();
-        std::cout << "[client] sent PING\n";
+        std::cout << "[client] sent PING" << std::endl;;
     }
 
     void Client::send_ping() {
@@ -85,11 +85,11 @@ namespace Client {
         receive_ping(ping);
 
         // print the PING message
-        std::cout << "[client] received PING\n";
-        std::cout << "        ping.type:" << unsigned (ping.type) << "\n";
-        std::cout << "        ping.token:" << ping.token << "\n";
-        std::cout << "        ping.client_time:" << ping.client_time << "\n";
-        std::cout << "        ping.server_time:" << ping.server_time << "\n";
+        std::cout << "[client] received PING" << std::endl;;
+        std::cout << "        ping.type:" << unsigned (ping.type) << std::endl;
+        std::cout << "        ping.token:" << ping.token << std::endl;
+        std::cout << "        ping.client_time:" << ping.client_time << std::endl;
+        std::cout << "        ping.server_time:" << ping.server_time << std::endl;
     }
 
     void Client::send_bank_list_request(BANK_LIST_REQUEST &bank_list_request) {
@@ -99,7 +99,7 @@ namespace Client {
 
         // send the BANK_LIST_REQUEST message
         _send_message();
-        std::cout << "[client] sent BANK_LIST_REQUEST\n";
+        std::cout << "[client] sent BANK_LIST_REQUEST" << std::endl;;
     }
 
     void Client::send_bank_list_request() {
@@ -131,9 +131,9 @@ namespace Client {
         receive_bank_list_response(bank_list_response);
 
         // print the BANK_LIST_RESPONSE
-        std::cout << "[client] received BANK_LIST_RESPONSE\n";
+        std::cout << "[client] received BANK_LIST_RESPONSE" << std::endl;;
         for (const auto &bank: bank_list_response.banks) {
-            std::cout << "        bank.id:" << bank.id << ", " << "bank.name:" << bank.name << "\n";
+            std::cout << "        bank.id:" << bank.id << ", " << "bank.name:" << bank.name << std::endl;
         }
     }
 
@@ -144,7 +144,7 @@ namespace Client {
 
         // send the LOGIN_REQUEST message
         _send_message();
-        std::cout << "[client] sent LOGIN_REQUEST\n";
+        std::cout << "[client] sent LOGIN_REQUEST" << std::endl;;
     }
 
     void Client::send_login_request(const std::string& user, const std::string& pass, const uint16_t& bank) {
@@ -172,14 +172,14 @@ namespace Client {
         }
 
         // print the LOGIN_RESPONSE
-        std::cout << "[client] received LOGIN_RESPONSE\n";
-        std::cout << "        login_response.type:" << unsigned(login_response.type) << "\n";
-        std::cout << "        login_response.id:" << unsigned(login_response.id) << "\n";
-        std::cout << "        login_response.bank:" << unsigned(login_response.bank) << "\n";
-        std::cout << "        login_response.citizen:" << unsigned(login_response.citizen) << "\n";
-        std::cout << "        login_response.name:" << login_response.name << "\n";
-        std::cout << "        login_response.user:" << login_response.user << "\n";
-        std::cout << "        login_response.token:" << login_response.token << "\n";
+        std::cout << "[client] received LOGIN_RESPONSE" << std::endl;;
+        std::cout << "        login_response.type:" << unsigned(login_response.type) << std::endl;
+        std::cout << "        login_response.id:" << unsigned(login_response.id) << std::endl;
+        std::cout << "        login_response.bank:" << unsigned(login_response.bank) << std::endl;
+        std::cout << "        login_response.citizen:" << unsigned(login_response.citizen) << std::endl;
+        std::cout << "        login_response.name:" << login_response.name << std::endl;
+        std::cout << "        login_response.user:" << login_response.user << std::endl;
+        std::cout << "        login_response.token:" << login_response.token << std::endl;
     }
 
     [[maybe_unused]] void Client::receive_login_response() {
@@ -196,7 +196,7 @@ namespace Client {
 
         // send the LOGOUT_REQUEST message
         _send_message();
-        std::cout << "[client] sent LOGOUT_REQUEST\n";
+        std::cout << "[client] sent LOGOUT_REQUEST" << std::endl;;
     }
 
     void Client::send_logout_request(const std::string &user, const std::string &token) {
@@ -230,8 +230,8 @@ namespace Client {
         receive_logout_response(logout_response);
 
         // print the LOGOUT_RESPONSE
-        std::cout << "[client] received LOGOUT_RESPONSE\n";
-        std::cout << "        logout_response.type:" << unsigned(logout_response.type) << "\n";
+        std::cout << "[client] received LOGOUT_RESPONSE" << std::endl;;
+        std::cout << "        logout_response.type:" << unsigned(logout_response.type) << std::endl;
     }
 
     void Client::send_account_list_request(ACCOUNT_LIST_REQUEST &account_list_request) {
@@ -241,7 +241,7 @@ namespace Client {
 
         // send the ACCOUNT_LIST_REQUEST message
         _send_message();
-        std::cout << "[client] sent ACCOUNT_LIST_REQUEST\n";
+        std::cout << "[client] sent ACCOUNT_LIST_REQUEST" << std::endl;;
     }
 
     void Client::send_account_list_request(const uint32_t &user, const std::string &token, const uint16_t &bank) {
@@ -269,14 +269,14 @@ namespace Client {
         }
 
         // print the ACCOUNT_LIST_RESPONSE
-        std::cout << "[client] received ACCOUNT_LIST_RESPONSE\n";
+        std::cout << "[client] received ACCOUNT_LIST_RESPONSE" << std::endl;;
         for (const auto &account: account_list_response.accounts) {
             std::cout << "        account.iban:" << account.iban;
             std::cout << ", account.user:" << unsigned(account.user);
             std::cout << ", account.bank:" << unsigned(account.bank);
             std::cout.precision(2);
             std::cout << std::fixed;
-            std::cout << ", account.balance:" << account.balance << "\n";
+            std::cout << ", account.balance:" << account.balance << std::endl;
         }
     }
 
@@ -294,7 +294,7 @@ namespace Client {
 
         // send the ADD_BALANCE_REQUEST message
         _send_message();
-        std::cout << "[client] sent ADD_BALANCE_REQUEST\n";
+        std::cout << "[client] sent ADD_BALANCE_REQUEST" << std::endl;;
     }
 
     void Client::send_add_balance_request(const uint32_t &user, const std::string &token, const uint16_t &bank,
@@ -332,10 +332,10 @@ namespace Client {
         receive_add_balance_response(add_balance_response);
 
         // print the ADD_BALANCE_RESPONSE
-        std::cout << "[client] received ADD_BALANCE_RESPONSE\n";
+        std::cout << "[client] received ADD_BALANCE_RESPONSE" << std::endl;;
         std::cout.precision(2);
         std::cout << std::fixed;
-        std::cout << "        add_balance_response.amount:" << add_balance_response.amount << "\n";
+        std::cout << "        add_balance_response.amount:" << add_balance_response.amount << std::endl;
     }
 
     void Client::send_transaction_request(TRANSACTION_REQUEST &transaction_request) {
@@ -345,7 +345,7 @@ namespace Client {
 
         // send the TRANSACTION_REQUEST message
         _send_message();
-        std::cout << "[client] sent TRANSACTION_REQUEST\n";
+        std::cout << "[client] sent TRANSACTION_REQUEST" << std::endl;;
     }
 
     void Client::send_transaction_request(const uint32_t &user, const std::string &token, const uint16_t &bank,
@@ -384,12 +384,12 @@ namespace Client {
         receive_transaction_response(transaction_response);
 
         // print the TRANSACTION_RESPONSE
-        std::cout << "[client] received TRANSACTION_RESPONSE\n";
-        std::cout << "        transaction_response.type:" << unsigned(transaction_response.type) << "\n";
-        std::cout << "        transaction_response.token:" << transaction_response.token << "\n";
+        std::cout << "[client] received TRANSACTION_RESPONSE" << std::endl;;
+        std::cout << "        transaction_response.type:" << unsigned(transaction_response.type) << std::endl;
+        std::cout << "        transaction_response.token:" << transaction_response.token << std::endl;
         std::cout.precision(2);
         std::cout << std::fixed;
-        std::cout << "        transaction_response.fee:" << transaction_response.fee << "\n";
+        std::cout << "        transaction_response.fee:" << transaction_response.fee << std::endl;
     }
 
     void Client::_send_message() {

@@ -2,6 +2,7 @@
 #include "src/Client.h"
 
 int main(int argc, char *argv[]) {
+
     // create client
     Client::Client client;
 
