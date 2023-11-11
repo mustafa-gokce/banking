@@ -653,6 +653,9 @@ namespace Server {
             return;
         }
         sqlite3_finalize(stmt);
+
+        // fill the TRANSACTION_RESPONSE
+        transaction_response.type = TRANSACTION_RESPONSE_TYPE::TRANSACTION_SUCCESS;
     }
 
     bool Server::handle_request() {
