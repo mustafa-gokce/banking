@@ -22,7 +22,7 @@ int main(int argc, char *argv[]) {
         std::cout << "[server] can not open database: " << sqlite3_errmsg(db) << std::endl;
         return (1);
     } else {
-        std::cout << "[server] opened database successfully" << std::endl;;
+        std::cout << "[server] opened database successfully" << std::endl;
     }
 
     // create a zmq context and socket
@@ -42,9 +42,9 @@ int main(int argc, char *argv[]) {
         // receive a message
         zmq::message_t message;
         if (sock.recv(message, zmq::recv_flags::dontwait)) {
-            std::cout << "[server] received a message" << std::endl;;
+            std::cout << "[server] received a message" << std::endl;
         } else {
-            std::cout << "[server] no message received" << std::endl;;
+            std::cout << "[server] no message received" << std::endl;
             std::this_thread::sleep_for(std::chrono::milliseconds(1000));
             continue;
         }
@@ -67,7 +67,7 @@ int main(int argc, char *argv[]) {
                 // parse the PING message
                 PING ping;
                 msg.msg.convert(ping);
-                std::cout << "[server] got PING" << std::endl;;
+                std::cout << "[server] got PING" << std::endl;
 
                 // prepare the response PING
                 ping.type = PING_TYPE::SERVER;
@@ -82,7 +82,7 @@ int main(int argc, char *argv[]) {
                 msgpack::pack(buffer, msg);
                 const std::string payload = buffer.str();
                 sock.send(zmq::buffer(payload), zmq::send_flags::dontwait);
-                std::cout << "[server] sent PING" << std::endl;;
+                std::cout << "[server] sent PING" << std::endl;
             }
 
             // handle the LOGIN_REQUEST message
@@ -91,7 +91,7 @@ int main(int argc, char *argv[]) {
                 // parse the LOGIN_REQUEST
                 LOGIN_REQUEST login_request;
                 msg.msg.convert(login_request);
-                std::cout << "[server] got LOGIN_REQUEST" << std::endl;;
+                std::cout << "[server] got LOGIN_REQUEST" << std::endl;
 
                 // create a LOGIN_RESPONSE
                 LOGIN_RESPONSE login_response;
@@ -111,7 +111,7 @@ int main(int argc, char *argv[]) {
                 sqlite3_bind_text(stmt, 1, login_request.user.c_str(), -1, SQLITE_STATIC);
                 sqlite3_bind_text(stmt, 2, login_request.pass.c_str(), -1, SQLITE_STATIC);
                 if (sqlite3_step(stmt) != SQLITE_ROW) {
-                    std::cout << "[server] user not found" << std::endl;;
+                    std::cout << "[server] user not found" << std::endl;
                     if (login_response.type == LOGIN_RESPONSE_TYPE::LOGIN_SUCCESS) {
                         login_response.type = LOGIN_RESPONSE_TYPE::INVALID_USERNAME_OR_PASSWORD;
                     }
@@ -139,7 +139,7 @@ int main(int argc, char *argv[]) {
                 sqlite3_bind_int(stmt, 1, (int) login_response.id);
                 sqlite3_bind_int(stmt, 2, login_request.bank);
                 if (sqlite3_step(stmt) != SQLITE_ROW) {
-                    std::cout << "[server] user has no accounts in the bank" << std::endl;;
+                    std::cout << "[server] user has no accounts in the bank" << std::endl;
                     if (login_response.type == LOGIN_RESPONSE_TYPE::LOGIN_SUCCESS) {
                         login_response.type = LOGIN_RESPONSE_TYPE::INVALID_BANK_ID;
                     }
@@ -154,7 +154,7 @@ int main(int argc, char *argv[]) {
                 // check if the user has already logged in
                 for (const auto &response: user_sessions) {
                     if (response.id == login_response.id) {
-                        std::cout << "[server] user has already logged in" << std::endl;;
+                        std::cout << "[server] user has already logged in" << std::endl;
                         if (login_response.type == LOGIN_RESPONSE_TYPE::LOGIN_SUCCESS) {
                             login_response.type = LOGIN_RESPONSE_TYPE::ALREADY_LOGGED_IN;
                         }
@@ -170,7 +170,7 @@ int main(int argc, char *argv[]) {
 
                     // add the LOGIN_RESPONSE to the list of login responses
                     user_sessions.push_back(login_response);
-                    std::cout << "[server] user " << login_response.user << " logged in successfully" << std::endl;;
+                    std::cout << "[server] user " << login_response.user << " logged in successfully" << std::endl;
                 }
 
                 // if login is not success clear fields
@@ -188,7 +188,7 @@ int main(int argc, char *argv[]) {
                 msgpack::pack(buffer, msg);
                 const std::string payload = buffer.str();
                 sock.send(zmq::buffer(payload), zmq::send_flags::dontwait);
-                std::cout << "[server] sent LOGIN_RESPONSE" << std::endl;;
+                std::cout << "[server] sent LOGIN_RESPONSE" << std::endl;
             }
 
             // handle the LOGOUT_REQUEST message
@@ -197,7 +197,7 @@ int main(int argc, char *argv[]) {
                 // parse the LOGOUT_REQUEST
                 LOGOUT_REQUEST logout_request;
                 msg.msg.convert(logout_request);
-                std::cout << "[server] got LOGOUT_REQUEST" << std::endl;;
+                std::cout << "[server] got LOGOUT_REQUEST" << std::endl;
 
                 // create a LOGOUT_RESPONSE
                 LOGOUT_RESPONSE logout_response;
@@ -212,7 +212,7 @@ int main(int argc, char *argv[]) {
                     }
                 }
                 if (token_index == -1) {
-                    std::cout << "[server] user has not logged in" << std::endl;;
+                    std::cout << "[server] user has not logged in" << std::endl;
                     if (logout_response.type == LOGOUT_RESPONSE_TYPE::LOGOUT_SUCCESS) {
                         logout_response.type = LOGOUT_RESPONSE_TYPE::NOT_LOGGED_IN;
                     }
@@ -221,7 +221,7 @@ int main(int argc, char *argv[]) {
                 // check if token is valid
                 if (logout_response.type == LOGOUT_RESPONSE_TYPE::LOGOUT_SUCCESS) {
                     if (user_sessions[token_index].token != logout_request.token) {
-                        std::cout << "[server] invalid token" << std::endl;;
+                        std::cout << "[server] invalid token" << std::endl;
                         if (logout_response.type == LOGOUT_RESPONSE_TYPE::LOGOUT_SUCCESS) {
                             logout_response.type = LOGOUT_RESPONSE_TYPE::INVALID_TOKEN;
                         }
@@ -230,7 +230,7 @@ int main(int argc, char *argv[]) {
 
                 // remove the LOGIN_RESPONSE from the list of login responses
                 if (logout_response.type == LOGOUT_RESPONSE_TYPE::LOGOUT_SUCCESS) {
-                    std::cout << "[server] user " << logout_request.user << " logged out successfully" << std::endl;;
+                    std::cout << "[server] user " << logout_request.user << " logged out successfully" << std::endl;
                     user_sessions.erase(user_sessions.begin() + token_index);
                 }
 
@@ -242,7 +242,7 @@ int main(int argc, char *argv[]) {
                 msgpack::pack(buffer, msg);
                 const std::string payload = buffer.str();
                 sock.send(zmq::buffer(payload), zmq::send_flags::dontwait);
-                std::cout << "[server] sent LOGOUT_RESPONSE" << std::endl;;
+                std::cout << "[server] sent LOGOUT_RESPONSE" << std::endl;
             }
 
             // handle the BANK_LIST_REQUEST message
@@ -251,7 +251,7 @@ int main(int argc, char *argv[]) {
                 // parse the BANK_LIST_REQUEST
                 BANK_LIST_REQUEST bank_list_request;
                 msg.msg.convert(bank_list_request);
-                std::cout << "[server] got BANK_LIST_REQUEST" << std::endl;;
+                std::cout << "[server] got BANK_LIST_REQUEST" << std::endl;
 
                 // get the banks from the database
                 sqlite3_stmt *stmt;
@@ -279,7 +279,7 @@ int main(int argc, char *argv[]) {
                 msgpack::pack(buffer, msg);
                 const std::string payload = buffer.str();
                 sock.send(zmq::buffer(payload), zmq::send_flags::dontwait);
-                std::cout << "[server] sent BANK_LIST_RESPONSE" << std::endl;;
+                std::cout << "[server] sent BANK_LIST_RESPONSE" << std::endl;
             }
 
             // handle the ACCOUNT_LIST_REQUEST message
@@ -288,7 +288,7 @@ int main(int argc, char *argv[]) {
                 // parse the ACCOUNT_LIST_REQUEST
                 ACCOUNT_LIST_REQUEST account_list_request;
                 msg.msg.convert(account_list_request);
-                std::cout << "[server] got ACCOUNT_LIST_REQUEST" << std::endl;;
+                std::cout << "[server] got ACCOUNT_LIST_REQUEST" << std::endl;
 
                 // create a ACCOUNT_LIST_RESPONSE
                 ACCOUNT_LIST_RESPONSE account_list_response;
@@ -337,7 +337,7 @@ int main(int argc, char *argv[]) {
                 msgpack::pack(buffer, msg);
                 const std::string payload = buffer.str();
                 sock.send(zmq::buffer(payload), zmq::send_flags::dontwait);
-                std::cout << "[server] sent ACCOUNT_LIST_RESPONSE" << std::endl;;
+                std::cout << "[server] sent ACCOUNT_LIST_RESPONSE" << std::endl;
             }
 
             // handle the ADD_BALANCE_REQUEST message
@@ -346,7 +346,7 @@ int main(int argc, char *argv[]) {
                 // parse the ADD_BALANCE_REQUEST
                 ADD_BALANCE_REQUEST add_balance_request;
                 msg.msg.convert(add_balance_request);
-                std::cout << "[server] got ADD_BALANCE_REQUEST" << std::endl;;
+                std::cout << "[server] got ADD_BALANCE_REQUEST" << std::endl;
 
                 // check if the user has already logged in and the token is valid
                 int token_index = -1;
@@ -410,7 +410,7 @@ int main(int argc, char *argv[]) {
                     msgpack::pack(buffer, msg);
                     const std::string payload = buffer.str();
                     sock.send(zmq::buffer(payload), zmq::send_flags::dontwait);
-                    std::cout << "[server] sent ADD_BALANCE_RESPONSE" << std::endl;;
+                    std::cout << "[server] sent ADD_BALANCE_RESPONSE" << std::endl;
                 }
             }
 
@@ -420,7 +420,7 @@ int main(int argc, char *argv[]) {
                 // parse the TRANSACTION_REQUEST
                 TRANSACTION_REQUEST transaction_request;
                 msg.msg.convert(transaction_request);
-                std::cout << "[server] got TRANSACTION_REQUEST" << std::endl;;
+                std::cout << "[server] got TRANSACTION_REQUEST" << std::endl;
 
                 // create a TRANSACTION_RESPONSE
                 TRANSACTION_RESPONSE transaction_response;
@@ -442,7 +442,7 @@ int main(int argc, char *argv[]) {
                 // check if amount is positive
                 if (transaction_response.type == TRANSACTION_RESPONSE_TYPE::TRANSACTION_SUCCESS) {
                     if (transaction_request.amount <= 0) {
-                        std::cout << "[server] amount is not positive" << std::endl;;
+                        std::cout << "[server] amount is not positive" << std::endl;
                         transaction_response.type = TRANSACTION_RESPONSE_TYPE::INVALID_AMOUNT;
                     }
                 }
@@ -550,7 +550,7 @@ int main(int argc, char *argv[]) {
                         transaction_response.type = TRANSACTION_RESPONSE_TYPE::INVALID_FROM_IBAN;
                     }
                     if (sqlite3_column_double(stmt, 0) < transaction_request.amount + fee) {
-                        std::cout << "[server] insufficient funds" << std::endl;;
+                        std::cout << "[server] insufficient funds" << std::endl;
                         transaction_response.type = TRANSACTION_RESPONSE_TYPE::INSUFFICIENT_FUNDS;
                     }
                     sqlite3_finalize(stmt);
@@ -622,7 +622,7 @@ int main(int argc, char *argv[]) {
                 msgpack::pack(buffer, msg);
                 const std::string payload = buffer.str();
                 sock.send(zmq::buffer(payload), zmq::send_flags::dontwait);
-                std::cout << "[server] sent TRANSACTION_RESPONSE" << std::endl;;
+                std::cout << "[server] sent TRANSACTION_RESPONSE" << std::endl;
             }
 
         } catch (const std::exception &e) {
