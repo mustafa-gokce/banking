@@ -130,6 +130,11 @@ namespace Client {
         MSG _msg; // this is the message that will be sent or received
         zmq::context_t _ctx; // create a zmq context
         zmq::socket_t _sock; // create a zmq socket
+
+        /*
+         * Sends a message to the server.
+         */
+        void _send_message();
     };
 
 } // Client

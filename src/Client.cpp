@@ -47,10 +47,7 @@ namespace Client {
         _msg = MSG{MSG_ID::PING, msgpack::object(ping, _z)};
 
         // send the PING message
-        std::stringstream buffer;
-        msgpack::pack(buffer, _msg);
-        const std::string payload = buffer.str();
-        _sock.send(zmq::buffer(payload), zmq::send_flags::dontwait);
+        _send_message();
         std::cout << "[client] sent PING\n";
     }
 
@@ -111,10 +108,7 @@ namespace Client {
         _msg = MSG{MSG_ID::BANK_LIST_REQUEST, msgpack::object(bank_list_request, _z)};
 
         // send the BANK_LIST_REQUEST message
-        std::stringstream buffer;
-        msgpack::pack(buffer, _msg);
-        const std::string payload = buffer.str();
-        _sock.send(zmq::buffer(payload), zmq::send_flags::dontwait);
+        _send_message();
         std::cout << "[client] sent BANK_LIST_REQUEST\n";
     }
 
@@ -169,10 +163,7 @@ namespace Client {
         _msg = MSG{MSG_ID::LOGIN_REQUEST, msgpack::object(login_request, _z)};
 
         // send the LOGIN_REQUEST message
-        std::stringstream buffer;
-        msgpack::pack(buffer, _msg);
-        const std::string payload = buffer.str();
-        _sock.send(zmq::buffer(payload), zmq::send_flags::dontwait);
+        _send_message();
         std::cout << "[client] sent LOGIN_REQUEST\n";
     }
 
@@ -234,10 +225,7 @@ namespace Client {
         _msg = MSG{MSG_ID::LOGOUT_REQUEST, msgpack::object(logout_request, _z)};
 
         // send the LOGOUT_REQUEST message
-        std::stringstream buffer;
-        msgpack::pack(buffer, _msg);
-        const std::string payload = buffer.str();
-        _sock.send(zmq::buffer(payload), zmq::send_flags::dontwait);
+        _send_message();
         std::cout << "[client] sent LOGOUT_REQUEST\n";
     }
 
@@ -292,10 +280,7 @@ namespace Client {
         _msg = MSG{MSG_ID::ACCOUNT_LIST_REQUEST, msgpack::object(account_list_request, _z)};
 
         // send the ACCOUNT_LIST_REQUEST message
-        std::stringstream buffer;
-        msgpack::pack(buffer, _msg);
-        const std::string payload = buffer.str();
-        _sock.send(zmq::buffer(payload), zmq::send_flags::dontwait);
+        _send_message();
         std::cout << "[client] sent ACCOUNT_LIST_REQUEST\n";
     }
 
@@ -358,10 +343,7 @@ namespace Client {
         _msg = MSG{MSG_ID::ADD_BALANCE_REQUEST, msgpack::object(add_balance_request, _z)};
 
         // send the ADD_BALANCE_REQUEST message
-        std::stringstream buffer;
-        msgpack::pack(buffer, _msg);
-        const std::string payload = buffer.str();
-        _sock.send(zmq::buffer(payload), zmq::send_flags::dontwait);
+        _send_message();
         std::cout << "[client] sent ADD_BALANCE_REQUEST\n";
     }
 
@@ -422,10 +404,7 @@ namespace Client {
         _msg = MSG{MSG_ID::TRANSACTION_REQUEST, msgpack::object(transaction_request, _z)};
 
         // send the TRANSACTION_REQUEST message
-        std::stringstream buffer;
-        msgpack::pack(buffer, _msg);
-        const std::string payload = buffer.str();
-        _sock.send(zmq::buffer(payload), zmq::send_flags::dontwait);
+        _send_message();
         std::cout << "[client] sent TRANSACTION_REQUEST\n";
     }
 
@@ -481,6 +460,17 @@ namespace Client {
         std::cout.precision(2);
         std::cout << std::fixed;
         std::cout << "        transaction_response.fee:" << transaction_response.fee << "\n";
+    }
+
+    void Client::_send_message() {
+
+        // serialize the message
+        std::stringstream buffer;
+        msgpack::pack(buffer, _msg);
+        const std::string payload = buffer.str();
+
+        // send the message
+        _sock.send(zmq::buffer(payload), zmq::send_flags::dontwait);
     }
 
 } // Client
