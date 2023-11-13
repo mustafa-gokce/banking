@@ -235,19 +235,15 @@ namespace Server {
             }
         }
         if (token_index == -1) {
+            logout_response.type = LOGOUT_RESPONSE_TYPE::NOT_LOGGED_IN;
             std::cout << "[server] user has not logged in" << std::endl;
-            if (logout_response.type == LOGOUT_RESPONSE_TYPE::LOGOUT_SUCCESS) {
-                logout_response.type = LOGOUT_RESPONSE_TYPE::NOT_LOGGED_IN;
-            }
         }
 
         // check if token is valid
         if (logout_response.type == LOGOUT_RESPONSE_TYPE::LOGOUT_SUCCESS) {
             if (_user_sessions[token_index].token != logout_request.token) {
+                logout_response.type = LOGOUT_RESPONSE_TYPE::INVALID_TOKEN;
                 std::cout << "[server] invalid token" << std::endl;
-                if (logout_response.type == LOGOUT_RESPONSE_TYPE::LOGOUT_SUCCESS) {
-                    logout_response.type = LOGOUT_RESPONSE_TYPE::INVALID_TOKEN;
-                }
             }
         }
 
