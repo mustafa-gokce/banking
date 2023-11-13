@@ -106,6 +106,7 @@ namespace Server {
 
         // send the PING message
         _send_ping(ping);
+        std::cout << "[server] sent PING" << std::endl;
     }
 
     void Server::_send_login_response(LOGIN_RESPONSE &login_response) {
