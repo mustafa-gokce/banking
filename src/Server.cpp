@@ -220,7 +220,7 @@ namespace Server {
         _send_message();
     }
 
-    void Server::_handle_logout_request(LOGOUT_REQUEST &logout_request) {
+    void Server::_handle_logout_request(const LOGOUT_REQUEST &logout_request) {
 
         // create a LOGOUT_RESPONSE
         LOGOUT_RESPONSE logout_response;

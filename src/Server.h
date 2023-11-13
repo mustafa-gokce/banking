@@ -88,7 +88,7 @@ namespace Server {
         /*
          * Handles a LOGOUT_REQUEST message from the client.
          */
-        void _handle_logout_request(LOGOUT_REQUEST &logout_request);
+        void _handle_logout_request(const LOGOUT_REQUEST &logout_request);
 
         /*
          * Sends an BANK_LIST_RESPONSE message to the client.
