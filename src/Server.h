@@ -78,7 +78,7 @@ namespace Server {
         /*
          * Handles a LOGIN_REQUEST message from the client.
          */
-        void _handle_login_request(LOGIN_REQUEST &login_request);
+        void _handle_login_request(const LOGIN_REQUEST &login_request, LOGIN_RESPONSE &login_response);
 
         /*
          * Sends a LOGOUT_RESPONSE message to the client.

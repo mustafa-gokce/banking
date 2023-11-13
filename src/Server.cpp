@@ -117,30 +117,24 @@ namespace Server {
         _send_message();
     }
 
-    void Server::_handle_login_request(LOGIN_REQUEST &login_request) {
-
-        // create a LOGIN_RESPONSE
-        LOGIN_RESPONSE login_response;
-        login_response.type = LOGIN_RESPONSE_TYPE::LOGIN_SUCCESS;
+    void Server::_handle_login_request(const LOGIN_REQUEST &login_request, LOGIN_RESPONSE &login_response) {
 
         // get the user from the database
         sqlite3_stmt *stmt;
         std::string sql = "SELECT id, citizen, name, user FROM users WHERE user = ? AND pass = ?";
         if (sqlite3_prepare_v2(_db, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
+            login_response.type = LOGIN_RESPONSE_TYPE::SERVER_ERROR;
             std::cout << "[server] can not prepare statement: " << sqlite3_errmsg(_db) << std::endl;
-            if (login_response.type == LOGIN_RESPONSE_TYPE::LOGIN_SUCCESS) {
-                login_response.type = LOGIN_RESPONSE_TYPE::SERVER_ERROR;
-            }
+            return;
         }
 
         // check if the user exists
         sqlite3_bind_text(stmt, 1, login_request.user.c_str(), -1, SQLITE_STATIC);
         sqlite3_bind_text(stmt, 2, login_request.pass.c_str(), -1, SQLITE_STATIC);
         if (sqlite3_step(stmt) != SQLITE_ROW) {
+            login_response.type = LOGIN_RESPONSE_TYPE::INVALID_USERNAME_OR_PASSWORD;
             std::cout << "[server] user not found" << std::endl;
-            if (login_response.type == LOGIN_RESPONSE_TYPE::LOGIN_SUCCESS) {
-                login_response.type = LOGIN_RESPONSE_TYPE::INVALID_USERNAME_OR_PASSWORD;
-            }
+            return;
         }
 
         // fill the LOGIN_RESPONSE
@@ -155,60 +149,40 @@ namespace Server {
         // get IBANs from the database for the user
         sql = "SELECT iban FROM accounts WHERE user = ? AND bank = ?";
         if (sqlite3_prepare_v2(_db, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
+            login_response.type = LOGIN_RESPONSE_TYPE::SERVER_ERROR;
             std::cout << "[server] can not prepare statement: " << sqlite3_errmsg(_db) << std::endl;
-            if (login_response.type == LOGIN_RESPONSE_TYPE::LOGIN_SUCCESS) {
-                login_response.type = LOGIN_RESPONSE_TYPE::SERVER_ERROR;
-            }
+            return;
         }
 
         // check user has at least one account in the bank
         sqlite3_bind_int(stmt, 1, (int) login_response.id);
         sqlite3_bind_int(stmt, 2, login_request.bank);
         if (sqlite3_step(stmt) != SQLITE_ROW) {
+            login_response.type = LOGIN_RESPONSE_TYPE::INVALID_BANK_ID;
             std::cout << "[server] user has no accounts in the bank" << std::endl;
-            if (login_response.type == LOGIN_RESPONSE_TYPE::LOGIN_SUCCESS) {
-                login_response.type = LOGIN_RESPONSE_TYPE::INVALID_BANK_ID;
-            }
+            return;
         }
         sqlite3_finalize(stmt);
 
         // fill the LOGIN_RESPONSE
-        if (login_response.type == LOGIN_RESPONSE_TYPE::LOGIN_SUCCESS) {
-            login_response.bank = login_request.bank;
+        login_response.bank = login_request.bank;
+
+        // check if the user has already logged in using std::any_of algorithm
+        if (std::any_of(_user_sessions.begin(), _user_sessions.end(),
+                        [&login_response](const LOGIN_RESPONSE &login_response_) {
+                            return login_response_.user == login_response.user;
+                        })) {
+            login_response.type = LOGIN_RESPONSE_TYPE::ALREADY_LOGGED_IN;
+            std::cout << "[server] user has already logged in" << std::endl;
+            return;
         }
 
-        // check if the user has already logged in
-        for (const auto &response: _user_sessions) {
-            if (response.id == login_response.id) {
-                std::cout << "[server] user has already logged in" << std::endl;
-                if (login_response.type == LOGIN_RESPONSE_TYPE::LOGIN_SUCCESS) {
-                    login_response.type = LOGIN_RESPONSE_TYPE::ALREADY_LOGGED_IN;
-                }
-                break;
-            }
-        }
+        // generate a random token
+        login_response.token = Tools::Tools::random_string(32);
 
-        // check user login is success
-        if (login_response.type == LOGIN_RESPONSE_TYPE::LOGIN_SUCCESS) {
-
-            // generate a random token
-            login_response.token = Tools::Tools::random_string(32);
-
-            // add the LOGIN_RESPONSE to the list of login responses
-            _user_sessions.push_back(login_response);
-            std::cout << "[server] user " << login_response.user << " logged in successfully" << std::endl;
-        }
-
-            // if login is not success clear fields
-        else {
-            LOGIN_RESPONSE_TYPE login_response_type = login_response.type;
-            login_response = LOGIN_RESPONSE{};
-            login_response.type = login_response_type;
-        }
-
-        // send the LOGIN_RESPONSE
-        _send_login_response(login_response);
-        std::cout << "[server] sent LOGIN_RESPONSE" << std::endl;
+        // add the LOGIN_RESPONSE to the list of login responses
+        _user_sessions.push_back(login_response);
+        std::cout << "[server] user " << login_response.user << " logged in successfully" << std::endl;
     }
 
     void Server::_send_logout_response(LOGOUT_RESPONSE &logout_response) {
@@ -690,7 +664,12 @@ namespace Server {
                 _msg.msg.convert(login_request);
 
                 // handle the LOGIN_REQUEST message
-                _handle_login_request(login_request);
+                LOGIN_RESPONSE login_response;
+                _handle_login_request(login_request, login_response);
+
+                // send the LOGIN_RESPONSE
+                _send_login_response(login_response);
+                std::cout << "[server] sent LOGIN_RESPONSE" << std::endl;
 
                 break;
             }
