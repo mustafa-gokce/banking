@@ -111,7 +111,7 @@ public:
  */
 enum class LOGOUT_RESPONSE_TYPE : uint8_t {
     LOGOUT_SUCCESS = 0,
-    SERVER_ERROR = 1,
+    // SERVER_ERROR = 1,
     NOT_LOGGED_IN = 2,
     INVALID_TOKEN = 3,
     UNKNOWN = 255,
