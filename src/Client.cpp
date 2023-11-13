@@ -280,7 +280,7 @@ namespace Client {
         }
     }
 
-    void Client::receive_account_list_response() {
+    [[maybe_unused]] void Client::receive_account_list_response() {
 
         // receive a ACCOUNT_LIST_RESPONSE message
         ACCOUNT_LIST_RESPONSE account_list_response;

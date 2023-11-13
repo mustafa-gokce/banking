@@ -84,7 +84,7 @@ namespace Client {
          * Need to save account list for future requests.
          */
         void receive_account_list_response(ACCOUNT_LIST_RESPONSE &account_list_response);
-        [[maybe_unused]] void receive_account_list_response();
+        [[maybe_unused]] [[maybe_unused]] void receive_account_list_response();
 
         /*
          * Send an add balance request to the server.
