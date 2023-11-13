@@ -3,7 +3,7 @@
 #include <chrono>
 #include "src/Server.h"
 
-int main(int argc, char *argv[]) {
+int main([[maybe_unused]] int argc, [[maybe_unused]] char *argv[]) {
 
     // create server
     Server::Server server;
@@ -20,7 +20,4 @@ int main(int argc, char *argv[]) {
             std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         }
     }
-
-    // program ends as expected
-    return 0;
 }
