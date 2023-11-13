@@ -138,12 +138,10 @@ namespace Server {
         }
 
         // fill the LOGIN_RESPONSE
-        if (login_response.type == LOGIN_RESPONSE_TYPE::LOGIN_SUCCESS) {
-            login_response.id = sqlite3_column_int(stmt, 0);
-            login_response.citizen = sqlite3_column_int(stmt, 1);
-            login_response.name = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 2));
-            login_response.user = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 3));
-        }
+        login_response.id = sqlite3_column_int(stmt, 0);
+        login_response.citizen = sqlite3_column_int(stmt, 1);
+        login_response.name = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 2));
+        login_response.user = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 3));
         sqlite3_finalize(stmt);
 
         // get IBANs from the database for the user
@@ -177,7 +175,8 @@ namespace Server {
             return;
         }
 
-        // generate a random token
+        // fill the LOGIN_RESPONSE
+        login_response.type = LOGIN_RESPONSE_TYPE::LOGIN_SUCCESS;
         login_response.token = Tools::Tools::random_string(32);
 
         // add the LOGIN_RESPONSE to the list of login responses
